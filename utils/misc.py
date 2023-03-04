@@ -86,6 +86,7 @@ def compute_similarity_matrix(data: Dict[str, List[Tensor]], n_times_testing=5):
 def random_query_results(similarity_matrix, gt_map, dataset, letter, n_queries=5, top_k=25):
     papyrus_set_indexes = list(set(similarity_matrix.index))
     fragment_queries = random.sample(papyrus_set_indexes, n_queries)
+    fragment_queries = ['59170Oxy'] + fragment_queries      # We want to see the result of TM 59170Oxy
     result = []
     for query in fragment_queries:
         query_result = {

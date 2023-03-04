@@ -10,6 +10,21 @@ letter_ascii = {
 }
 
 
+def padding_image(img, new_size, color=(0, 0, 0)):
+    old_image_height, old_image_width, channels = img.shape
+    new_image_width, new_image_height = new_size
+    result = np.full((new_image_height, new_image_width, channels), color, dtype=np.uint8)
+
+    # compute center offset
+    x_center = (new_image_width - old_image_width) // 2
+    y_center = (new_image_height - old_image_height) // 2
+
+    # copy img image into center of result image
+    result[y_center:y_center + old_image_height, x_center:x_center + old_image_width] = img
+    return result
+
+
+
 def resize_image(image: Image.Image, scale_factor: float) -> Image.Image:
     """Resize image by scale factor."""
     if scale_factor == 1:

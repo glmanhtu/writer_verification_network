@@ -1,20 +1,21 @@
 import random
 
+import numpy as np
 import torchvision.transforms
 import torchvision.transforms
 from PIL import ImageOps, Image
 from torchvision.transforms import transforms
 
-from utils.data_utils import resize_image
+from utils.data_utils import resize_image, padding_image
 
 
 def get_transforms(img_size):
     return torchvision.transforms.Compose([
         MovingResize((64, 64), random_move=True),
-        torchvision.transforms.Resize(int(img_size * 1.2)),
-        torchvision.transforms.RandomCrop(img_size),
+        torchvision.transforms.Resize(int(64 * 1.5)),
+        torchvision.transforms.RandomCrop(img_size, pad_if_needed=True, fill=(255, 255, 255)),
         torchvision.transforms.RandomApply([
-            torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3),
+            torchvision.transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
         ], p=0.3),
         torchvision.transforms.RandomApply([
             torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
@@ -29,8 +30,9 @@ def get_transforms(img_size):
 def val_transforms(img_size):
     return torchvision.transforms.Compose([
         MovingResize((64, 64), random_move=False),
-        torchvision.transforms.Resize(int(img_size * 1.2)),
-        torchvision.transforms.CenterCrop(img_size),
+        torchvision.transforms.Resize(int(64 * 1.5)),
+        lambda x: np.array(x),
+        lambda x: padding_image(x, (img_size, img_size), color=(255, 255, 255)),
         torchvision.transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])

@@ -6,6 +6,7 @@ import torchvision.transforms
 
 from dataset.tm_dataset import TMDataset
 from options.train_options import TrainOptions
+from utils.data_utils import padding_image
 from utils.transform import MovingResize
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
@@ -13,8 +14,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: 
 args = TrainOptions(save_conf=False).parse()
 img_size = 224
 transforms = torchvision.transforms.Compose([MovingResize((64, 64)),
-                                             torchvision.transforms.Resize(int(img_size * 1.2)),
-                                             torchvision.transforms.RandomCrop(img_size),
+                                             torchvision.transforms.Resize(int(64 * 1.5)),
+                                             torchvision.transforms.RandomCrop(img_size, pad_if_needed=True, fill=(255, 255, 255)),
                                              torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
                                              lambda x: np.array(x)])
 

@@ -34,7 +34,7 @@ class BaseOptions:
                                   help='name of the experiment. It decides where to store samples and models')
         self._parser.add_argument('--wb_mode', type=str, default='online', help='Wandb sync mode')
         self._parser.add_argument('--wb_entity', type=str, default='glmanhtu', help='Wandb entity name')
-        self._parser.add_argument('--wb_project', type=str, default='papyrus', help='Wandb project')
+        self._parser.add_argument('--wb_project', type=str, default='writer-verification-network', help='Wandb project')
         self._parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         self._parser.add_argument('--lr', type=float, default=4e-4,
                                   help="The initial learning rate")

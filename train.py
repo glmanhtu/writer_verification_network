@@ -10,7 +10,7 @@ from dataset.tm_dataset import TMDataset
 from model.model_factory import ModelsFactory
 from options.train_options import TrainOptions
 from utils import wb_utils
-from utils.data_utils import load_triplet_file
+from utils.data_utils import load_triplet_file, letter_ascii
 from utils.misc import EarlyStop, display_terminal, compute_similarity_matrix, get_metrics, display_terminal_eval, \
     random_query_results
 from utils.transform import get_transforms, val_transforms
@@ -95,12 +95,13 @@ class Trainer:
                 self._model.save()  # save best model
                 for letter in similarity_matrices:
                     similar_df = similarity_matrices[letter]
-                    similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{letter}.csv'),
+                    ascii_letter = letter_ascii[letter]
+                    similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{ascii_letter}.csv'),
                                       encoding='utf-8')
 
                     query_results = random_query_results(similar_df, self.data_loader_val.dataset, letter,
                                                          n_queries=5, top_k=25)
-                    wandb.log({f'val/best_prediction/{letter}': wb_utils.generate_query_table(query_results, top_k=25)},
+                    wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=25)},
                               step=self._current_step)
 
             # print epoch info
@@ -156,17 +157,19 @@ class Trainer:
         all_m_ap = []
         similarity_matrices = {}
         for letter in letter_features:
+            ascii_letter = letter_ascii[letter]
+
             similar_df = compute_similarity_matrix(letter_features[letter])
-            wandb.log({f'val/similarity_matrix/{letter}': wandb.Image(create_heatmap(similar_df))},
+            wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)
             m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, lambda x: self._letter_positive_groups[letter][x])
 
             val_dict = {
-                f'{mode}/{letter}/loss': sum(val_losses) / len(val_losses),
-                f'{mode}/{letter}/m_ap': m_ap,
-                f'{mode}/{letter}/top_1': top1,
-                f'{mode}/{letter}/pr_a_k10': pr_a_k10,
-                f'{mode}/{letter}/pr_a_k100': pr_a_k100
+                f'{mode}/{ascii_letter}/loss': sum(val_losses) / len(val_losses),
+                f'{mode}/{ascii_letter}/m_ap': m_ap,
+                f'{mode}/{ascii_letter}/top_1': top1,
+                f'{mode}/{ascii_letter}/pr_a_k10': pr_a_k10,
+                f'{mode}/{ascii_letter}/pr_a_k100': pr_a_k100
             }
             wandb.log(val_dict, step=self._current_step)
             display_terminal_eval(val_start_time, i_epoch, val_dict)

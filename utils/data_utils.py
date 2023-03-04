@@ -1,9 +1,13 @@
 import json
 
-import cv2
 import numpy as np
-
 from PIL import Image
+
+letter_ascii = {
+    'α': 'alpha',
+    'ε': 'epsilon',
+    'μ': 'm'
+}
 
 
 def resize_image(image: Image.Image, scale_factor: float) -> Image.Image:

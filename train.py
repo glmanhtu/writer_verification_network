@@ -95,12 +95,12 @@ class Trainer:
                 self._model.save()  # save best model
                 for letter in similarity_matrices:
                     similar_df = similarity_matrices[letter]
-                    similar_df.to_csv(os.path.join(self._working_dir, 'similarity_matrix.csv'), encoding='utf-8')
+                    similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{letter}.csv'),
+                                      encoding='utf-8')
 
                     query_results = random_query_results(similar_df, self.data_loader_val.dataset, letter,
                                                          n_queries=5, top_k=25)
-                    wandb.log({f'{letter}/best_model_prediction': wb_utils.generate_query_table(query_results,
-                                                                                                top_k=25)},
+                    wandb.log({f'val/best_prediction/{letter}': wb_utils.generate_query_table(query_results, top_k=25)},
                               step=self._current_step)
 
             # print epoch info
@@ -157,7 +157,7 @@ class Trainer:
         similarity_matrices = {}
         for letter in letter_features:
             similar_df = compute_similarity_matrix(letter_features[letter])
-            wandb.log({f'val/{letter}/similarity_matrix': wandb.Image(create_heatmap(similar_df))},
+            wandb.log({f'val/similarity_matrix/{letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)
             m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, lambda x: self._letter_positive_groups[letter][x])
 

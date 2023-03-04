@@ -25,6 +25,8 @@ class TMDataset(Dataset):
         letters = {}
         excluded = {}
         for file in files:
+            if letter not in train_letters:
+                continue
             width, height = imagesize.get(file)
             if width < 32 or height < 32:
                 excluded.setdefault('small_size', []).append(file)
@@ -34,8 +36,6 @@ class TMDataset(Dataset):
                 continue
             file_name_components = os.path.basename(file).split('_')
             letter, tm = file_name_components[0], file_name_components[1]
-            if letter not in train_letters:
-                continue
             letters.setdefault(letter, {}).setdefault(tm, []).append(file)
 
         for letter in list(letters.keys()):

@@ -11,11 +11,16 @@ from utils.data_utils import resize_image
 def get_transforms(img_size):
     return torchvision.transforms.Compose([
         MovingResize((64, 64), random_move=True),
-        torchvision.transforms.Resize(img_size),
+        torchvision.transforms.Resize(int(img_size * 1.2)),
+        torchvision.transforms.RandomCrop(img_size),
         torchvision.transforms.RandomApply([
             torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3),
         ], p=0.3),
+        torchvision.transforms.RandomApply([
+            torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
+        ], p=0.5),
         # torchvision.transforms.RandomHorizontalFlip(),
+        torchvision.transforms.RandomGrayscale(p=0.3),
         torchvision.transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -24,7 +29,8 @@ def get_transforms(img_size):
 def val_transforms(img_size):
     return torchvision.transforms.Compose([
         MovingResize((64, 64), random_move=False),
-        torchvision.transforms.Resize(img_size),
+        torchvision.transforms.Resize(int(img_size * 1.2)),
+        torchvision.transforms.CenterCrop(img_size),
         torchvision.transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])

@@ -11,7 +11,11 @@ from utils.transform import MovingResize
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
 args = TrainOptions(save_conf=False).parse()
-transforms = torchvision.transforms.Compose([MovingResize((64, 64)), torchvision.transforms.Resize(224),
+img_size = 224
+transforms = torchvision.transforms.Compose([MovingResize((64, 64)),
+                                             torchvision.transforms.Resize(int(img_size * 1.2)),
+                                             torchvision.transforms.RandomCrop(img_size),
+                                             torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
                                              lambda x: np.array(x)])
 
 train_dataset = TMDataset(args.tm_dataset_path, transforms, args.letters)

@@ -139,11 +139,6 @@ class Trainer:
             feature_cpu = features.cpu()
             letter_features.setdefault(letter, {}).setdefault(tm, []).append(feature_cpu)
 
-    def _get_group(self, file_name):
-        file_name_components = os.path.basename(file_name).split('_')
-        letter, tm = file_name_components[0], file_name_components[1]
-        return self._letter_positive_groups[letter][tm]
-
     def _validate(self, i_epoch, val_loader, mode='val', n_time_validates=1):
         val_start_time = time.time()
         # set model to eval
@@ -164,7 +159,7 @@ class Trainer:
             similar_df = compute_similarity_matrix(letter_features[letter])
             wandb.log({f'val/{letter}/similarity_matrix': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)
-            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, self._get_group)
+            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, lambda x: self._letter_positive_groups[letter][x])
 
             val_dict = {
                 f'{mode}/{letter}/loss': sum(val_losses) / len(val_losses),

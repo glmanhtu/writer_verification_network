@@ -83,7 +83,7 @@ def compute_similarity_matrix(data: Dict[str, List[Tensor]], n_times_testing=5):
     return matrix.reindex(sorted(matrix.columns), axis=1)
 
 
-def random_query_results(similarity_matrix, dataset, letter, n_queries=5, top_k=25):
+def random_query_results(similarity_matrix, gt_map, dataset, letter, n_queries=5, top_k=25):
     papyrus_set_indexes = list(set(similarity_matrix.index))
     fragment_queries = random.sample(papyrus_set_indexes, n_queries)
     result = []
@@ -95,9 +95,13 @@ def random_query_results(similarity_matrix, dataset, letter, n_queries=5, top_k=
         }
         similarity_result = similarity_matrix[query]
         for target, similarity in similarity_result.items():
+            in_gt = False
+            if gt_map[query] == gt_map[target]:
+                in_gt = True
             query_result['results'].append({
                 'target': target,
                 'target_img': None,
+                'in_gt': in_gt,
                 'similarity': similarity,
             })
         top_k_similarities = sorted(query_result['results'], key=lambda x: x['similarity'], reverse=True)
@@ -131,7 +135,7 @@ def compute_pr_a_k(sorted_retrievals, k):
     return pr_a_k.sum() / len(pr_a_k)
 
 
-def add_description(in_img, bottom_description, left_description):
+def add_description(in_img, bottom_description, left_description, green_border=False):
     white = [255, 255, 255]
     height, width, depth = in_img.shape
 
@@ -149,4 +153,9 @@ def add_description(in_img, bottom_description, left_description):
 
     cv2.putText(in_img, bottom_description,
                 (10, height + 15), font, font_scale, font_color, thickness, line_type)
+
+    if green_border:
+        green = [0, 255, 0]
+        in_img = cv2.copyMakeBorder(in_img, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=green)
+
     return in_img

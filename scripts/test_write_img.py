@@ -3,7 +3,7 @@ import matplotlib
 
 from utils.misc import add_description
 
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
 
 img = np.zeros([224, 224, 3], dtype=np.uint8)

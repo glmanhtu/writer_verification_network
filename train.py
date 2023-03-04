@@ -99,9 +99,9 @@ class Trainer:
                     similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{ascii_letter}.csv'),
                                       encoding='utf-8')
 
-                    query_results = random_query_results(similar_df, self.data_loader_val.dataset, letter,
-                                                         n_queries=5, top_k=25)
-                    wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=25)},
+                    query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
+                                                         self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
+                    wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
                               step=self._current_step)
 
             # print epoch info

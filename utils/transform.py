@@ -1,5 +1,6 @@
 import random
 
+import cv2
 import numpy as np
 import torchvision.transforms
 import torchvision.transforms
@@ -12,8 +13,8 @@ from utils.data_utils import resize_image, padding_image
 def get_transforms(img_size):
     return torchvision.transforms.Compose([
         MovingResize((64, 64), random_move=True),
-        torchvision.transforms.Resize(int(64 * 1.5)),
-        torchvision.transforms.RandomCrop(img_size, pad_if_needed=True, fill=(255, 255, 255)),
+        torchvision.transforms.Resize(int(img_size * 1.2)),
+        torchvision.transforms.RandomCrop(img_size),
         torchvision.transforms.RandomApply([
             torchvision.transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
         ], p=0.3),
@@ -30,9 +31,8 @@ def get_transforms(img_size):
 def val_transforms(img_size):
     return torchvision.transforms.Compose([
         MovingResize((64, 64), random_move=False),
-        torchvision.transforms.Resize(int(64 * 1.5)),
-        lambda x: np.array(x),
-        lambda x: padding_image(x, (img_size, img_size), color=(255, 255, 255)),
+        torchvision.transforms.Resize(int(img_size * 1.2)),
+        torchvision.transforms.CenterCrop(img_size),
         torchvision.transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -72,3 +72,24 @@ class MovingResize:
         result = Image.new(mode="RGB", size=(self.img_width, self.img_height), color=(255, 255, 255))
         result.paste(image, box=(int(mov * (self.img_width - width)), int(mov * (self.img_height - height))))
         return result
+
+
+class RandomBinarizeThreshold:
+    def __call__(self, img, sample_size=10):
+        gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        w, h = gray.shape
+        top_left = gray[0:sample_size, 0:sample_size]
+        top_right = gray[w - sample_size:w, 0:sample_size]
+        bot_left = gray[0:sample_size, h-sample_size:h]
+        bot_right = gray[w - sample_size:w, h-sample_size:h]
+
+        top_left = np.min(top_left), np.max(top_left)
+        top_right = np.min(top_right), np.max(top_right)
+        bot_left = np.min(bot_left), np.max(bot_left)
+        bot_right = np.min(bot_right), np.max(bot_right)
+
+        candidates = sorted([top_left, top_right, bot_left, bot_right], key=lambda x: x[1], reverse=True)
+        min_threshold, max_threshold = candidates[0]
+
+        img[gray > min_threshold] = 255
+        return img

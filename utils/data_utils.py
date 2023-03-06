@@ -47,17 +47,20 @@ def chunks(l, n):
 
 
 def add_items_to_group(items, groups):
-    reference_group = None
-    for group in groups:
+    reference_group = {}
+    for g_id, group in enumerate(groups):
         for fragment_id in items:
-            if fragment_id in group:
-                reference_group = group
-                break
-        if reference_group is not None:
-            break
-    if reference_group is not None:
+            if fragment_id in group and g_id not in reference_group:
+                reference_group[g_id] = group
+
+    if len(reference_group) > 0:
+        reference_ids = list(reference_group.keys())
         for fragment_id in items:
-            reference_group.add(fragment_id)
+            reference_group[reference_ids[0]].add(fragment_id)
+        for g_id in reference_ids[1:]:
+            for fragment_id in reference_group[g_id]:
+                reference_group[reference_ids[0]].add(fragment_id)
+            del groups[g_id]
     else:
         groups.append(set(items))
 

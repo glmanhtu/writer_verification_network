@@ -18,6 +18,8 @@ class BaseOptions:
                                                                   'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'ϲ', 'τ', 'υ',
                                                                   'φ', 'χ', 'ψ', 'ω'], nargs="+")
         self._parser.add_argument('--triplet_files', type=str, default=[], nargs='+')
+        self._parser.add_argument('--ss_dim', type=int, default=512, help='Simsiam dim')
+        self._parser.add_argument('--ss_pred_dim', type=int, default=128, help='Simsiam pred dim')
         self._parser.add_argument('--image_size', type=int, default=224, help='Input image size')
         self._parser.add_argument('--batch_size', type=int, default=32, help='Input batch size')
         self._parser.add_argument('--optimizer', type=str, default='Adam')

@@ -64,11 +64,10 @@ def compute_similarity_matrix(data: Dict[str, Tensor], n_times_testing=5):
     for i in range(len(fragments)):
         for j in range(i, len(fragments)):
             source, target = fragments[i], fragments[j]
-            n_items = min(len(data[source]), len(data[target]))
-            n_times = max((len(data[source]) + len(data[target])) // 2, n_times_testing)
+            n_items = max(len(data[source]), len(data[target]))
 
-            source_features = data[source][torch.randint(len(data[source]), (n_times * n_items,))]
-            target_features = data[target][torch.randint(len(data[target]), (n_times * n_items,))]
+            source_features = data[source][torch.randint(len(data[source]), (n_times_testing * n_items,))]
+            target_features = data[target][torch.randint(len(data[target]), (n_times_testing * n_items,))]
 
             source_features = F.normalize(source_features, p=2, dim=1)
             target_features = F.normalize(target_features, p=2, dim=1)

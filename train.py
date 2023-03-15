@@ -139,8 +139,8 @@ class Trainer:
     @staticmethod
     def add_features(letter_features, letters, tm_features, features):
         for letter, tm, features in zip(letters, tm_features, features):
-            feature_cpu = features.cpu()
-            letter_features.setdefault(letter, {}).setdefault(tm, []).append(feature_cpu)
+            feature_detach = features.detach()
+            letter_features.setdefault(letter, {}).setdefault(tm, []).append(feature_detach)
 
     def _validate(self, i_epoch, val_loader, mode='val', n_time_validates=1):
         val_start_time = time.time()

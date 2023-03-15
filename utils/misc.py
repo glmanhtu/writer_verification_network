@@ -75,7 +75,7 @@ def compute_similarity_matrix(data: Dict[str, List[Tensor]], n_times_testing=5):
             similarity = F.cosine_similarity(source_features, target_features, dim=1)
             similarity_percentage = (similarity + 1) / 2   # As output of cosine_similarity ranging between [-1, 1]
 
-            mean_similarity = similarity_percentage.mean().item()
+            mean_similarity = similarity_percentage.mean().cpu().item()
             similarity_map.setdefault(source, {})[target] = mean_similarity
             similarity_map.setdefault(target, {})[source] = mean_similarity
 

@@ -38,12 +38,13 @@ class Trainer:
         transforms = get_transforms(args.image_size)
         dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters)
         self.data_loader_train = DataLoader(dataset_train, shuffle=True, num_workers=args.n_threads_train,
-                                            batch_size=args.batch_size, drop_last=True, pin_memory=True)
+                                            batch_size=args.batch_size, drop_last=True, persistent_workers=True,
+                                            pin_memory=True)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'])
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
-                                          batch_size=args.batch_size)
+                                          persistent_workers=True, pin_memory=True, batch_size=args.batch_size)
 
         self.early_stop = EarlyStop(args.early_stop)
         print("Training sets: {} images".format(len(dataset_train)))

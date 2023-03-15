@@ -161,7 +161,7 @@ class Trainer:
         val_dicts = {}
         for letter in list(letter_features.keys()):
             ascii_letter = letter_ascii[letter]
-
+            letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter]}
             similar_df = compute_similarity_matrix(letter_features[letter])
             del letter_features[letter]
 

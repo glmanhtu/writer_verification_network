@@ -11,7 +11,7 @@ def generate_random_features(size):
     result = []
     for _ in range(length):
         result.append(torch.rand((size,), dtype=torch.float32))
-    return result
+    return torch.stack(result)
 
 
 img_features = {

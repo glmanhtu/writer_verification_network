@@ -42,7 +42,7 @@ class ModelWrapper:
     def existing(self):
         return self._check_model()
 
-    def get_current_lr(self):
+    def print_current_lr(self):
         lr = []
         for param_group in self._optimizer.param_groups:
             lr.append(param_group['lr'])

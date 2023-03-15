@@ -78,7 +78,6 @@ class Trainer:
         best_m_ap = 0.
         for i_epoch in range(1, args.nepochs + 1):
             epoch_start_time = time.time()
-            self._model.get_current_lr()
             # train epoch
             self._train_epoch(i_epoch)
             if args.lr_policy == 'step':
@@ -129,6 +128,7 @@ class Trainer:
             self._current_step += 1
 
             if self._current_step % args.save_freq_iter == 0:
+                self._model.print_current_lr()
                 save_dict = {
                     'train/loss': sum(losses) / len(losses),
                 }
@@ -161,7 +161,7 @@ class Trainer:
         val_dicts = {}
         for letter in list(letter_features.keys()):
             ascii_letter = letter_ascii[letter]
-            letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter]}
+            letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter].items()}
             similar_df = compute_similarity_matrix(letter_features[letter])
             del letter_features[letter]
 

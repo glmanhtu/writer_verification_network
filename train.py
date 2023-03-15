@@ -163,6 +163,8 @@ class Trainer:
             ascii_letter = letter_ascii[letter]
 
             similar_df = compute_similarity_matrix(letter_features[letter])
+            del letter_features[letter]
+
             wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)
             m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, lambda x: self._letter_positive_groups[letter][x])

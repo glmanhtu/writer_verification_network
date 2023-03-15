@@ -87,7 +87,7 @@ class Trainer:
             if not i_epoch % args.n_epochs_per_eval == 0:
                 continue
 
-            current_m_ap, similarity_matrices = self._validate(i_epoch, self.data_loader_val)
+            current_m_ap, similarity_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val)
 
             if current_m_ap > best_m_ap:
                 print("Average mAP improved, from {:.4f} to {:.4f}".format(best_m_ap, current_m_ap))
@@ -103,6 +103,8 @@ class Trainer:
                                                          self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
                     wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
                               step=self._current_step)
+                    best_pred = {f'best_model/{k}': v for k, v in val_dicts[letter].items()}
+                    wandb.log(best_pred, step=self._current_step)
 
             # print epoch info
             time_epoch = time.time() - epoch_start_time
@@ -156,6 +158,7 @@ class Trainer:
 
         all_m_ap = []
         similarity_matrices = {}
+        val_dicts = {}
         for letter in letter_features:
             ascii_letter = letter_ascii[letter]
 
@@ -175,8 +178,9 @@ class Trainer:
             display_terminal_eval(val_start_time, i_epoch, val_dict)
             all_m_ap.append(m_ap)
             similarity_matrices[letter] = similar_df
+            val_dicts[letter] = val_dict
 
-        return sum(all_m_ap) / len(all_m_ap), similarity_matrices
+        return sum(all_m_ap) / len(all_m_ap), similarity_matrices, val_dicts
 
 
 if __name__ == "__main__":

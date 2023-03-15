@@ -159,7 +159,7 @@ class Trainer:
         all_m_ap = []
         similarity_matrices = {}
         val_dicts = {}
-        for letter in letter_features:
+        for letter in list(letter_features.keys()):
             ascii_letter = letter_ascii[letter]
 
             similar_df = compute_similarity_matrix(letter_features[letter])

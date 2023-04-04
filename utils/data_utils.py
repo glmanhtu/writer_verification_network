@@ -47,6 +47,13 @@ def chunks(l, n):
 
 
 def add_items_to_group(items, groups):
+    """
+    Add list of items to groups,
+    If there are no groups that match with the items, create a new group and put those item in this new group
+    If there is only one matching group, add all these items to this group
+    If there is more than one matching group, add all these items to the first group, then move items from
+                other matching groups to this first group
+    """
     reference_group = {}
     for g_id, group in enumerate(groups):
         for fragment_id in items:
@@ -63,6 +70,21 @@ def add_items_to_group(items, groups):
             del groups[g_id]
     else:
         groups.append(set(items))
+
+
+def get_all_tms(triplet_file):
+    all_tms = []
+    with open(triplet_file) as f:
+        triplet_filter = json.load(f)
+    for item in triplet_filter['relations']:
+        current_tm = item['category']
+        all_tms.append(current_tm)
+        for second_item in item['relations']:
+            second_tm = second_item['category']
+            if current_tm == '' or second_tm == '':
+                continue
+            all_tms.append(second_tm)
+    return set(all_tms)
 
 
 def load_triplet_file(filter_file, all_tms):
@@ -85,13 +107,14 @@ def load_triplet_file(filter_file, all_tms):
                 continue
             relationship = second_item['relationship']
             if relationship == 4:
-                negative_pairs.setdefault(current_tm, []).append(second_tm)
-                negative_pairs.setdefault(second_tm, []).append(current_tm)
+                negative_pairs.setdefault(current_tm, set([])).add(second_tm)
+                negative_pairs.setdefault(second_tm, set([])).add(current_tm)
             if relationship == 1:
                 add_items_to_group([current_tm, second_tm], positive_groups)
 
     for tm in all_tms:
         add_items_to_group([tm], positive_groups)
+        negative_pairs.setdefault(tm, set([]))
     for current_tm in missing_tm:
         print(f'TM {current_tm} is not available on the training dataset')
 

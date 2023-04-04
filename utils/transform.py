@@ -18,9 +18,9 @@ def get_transforms(img_size):
         torchvision.transforms.RandomApply([
             torchvision.transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
         ], p=0.3),
-        torchvision.transforms.RandomApply([
-            torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
-        ], p=0.5),
+        # torchvision.transforms.RandomApply([
+        #     torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
+        # ], p=0.5),
         # torchvision.transforms.RandomHorizontalFlip(),
         torchvision.transforms.RandomGrayscale(p=0.3),
         torchvision.transforms.ToTensor(),

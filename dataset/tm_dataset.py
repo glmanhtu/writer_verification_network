@@ -9,6 +9,7 @@ import torchvision
 from PIL import Image
 from torch.utils.data import Dataset
 
+from utils.data_utils import chunks
 from utils.transform import MovingResize
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
@@ -16,7 +17,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: 
 
 class TMDataset(Dataset):
 
-    def __init__(self, dataset_path: str, transforms, train_letters):
+    def __init__(self, dataset_path: str, transforms, train_letters, is_train=False, fold=1, k_fold=3):
         self.dataset_path = dataset_path
         assert os.path.isdir(self.dataset_path)
         image_pattern = os.path.join(dataset_path, '**', '*.png')
@@ -39,9 +40,19 @@ class TMDataset(Dataset):
 
             letters.setdefault(letter, {}).setdefault(tm, []).append(file)
 
+        all_tms = set([x for y in letters for x in letters[y].keys()])
+        folds = list(chunks(list(all_tms), k_fold))
+        if is_train:
+            del folds[fold]
+            tm_keep = set([x for y in folds for x in y])
+        else:
+            tm_keep = set(folds[fold])
+
         for letter in list(letters.keys()):
             for tm in list(letters[letter].keys()):
-                if len(letters[letter][tm]) < 2:
+                if tm not in tm_keep:
+                    del letters[letter][tm]
+                elif len(letters[letter][tm]) < 2:
                     excluded.setdefault('nb_img_per_tm', []).append(letters[letter][tm])
                     del letters[letter][tm]
 

@@ -29,19 +29,21 @@ wandb.init(group=args.group,
 
 
 class Trainer:
-    def __init__(self):
+    def __init__(self, fold=0, k_fold=1):
         device = torch.device('cuda' if args.cuda else 'cpu')
 
         self._working_dir = os.path.join(args.checkpoints_dir, args.name)
         self._model = ModelsFactory.get_model(args, self._working_dir, is_train=True, device=device,
                                               dropout=args.dropout)
         transforms = get_transforms(args.image_size)
-        dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters)
+        dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters, is_train=True, fold=fold,
+                                  k_fold=k_fold)
         self.data_loader_train = DataLoader(dataset_train, shuffle=True, num_workers=args.n_threads_train,
                                             batch_size=args.batch_size, drop_last=True, persistent_workers=True,
                                             pin_memory=True)
         transforms = val_transforms(args.image_size)
-        dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'])
+        dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
+                                k_fold=k_fold)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
                                           persistent_workers=True, pin_memory=True, batch_size=args.batch_size)

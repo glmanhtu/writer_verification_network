@@ -52,14 +52,6 @@ class Trainer:
             'μ': load_triplet_file(os.path.join(dir_path, 'mtest.triplet'), dataset_val.letters['μ'].keys()),
         }
 
-        self._letter_positive_groups = {}
-        for letter in self.triplet_def:
-            positive_groups = self.triplet_def[letter][0]
-            tms = {}
-            for idx, group in enumerate(positive_groups):
-                for tm in group:
-                    tms[tm] = idx
-            self._letter_positive_groups[letter] = tms
         self._current_step = 0
 
     def is_trained(self):
@@ -75,7 +67,7 @@ class Trainer:
         best_m_ap = 0.
         for i_epoch in range(1, self.args.nepochs + 1):
             epoch_start_time = time.time()
-            # train epoch
+            train epoch
             self._train_epoch(i_epoch)
             if self.args.lr_policy == 'step':
                 self._model.lr_scheduler.step()
@@ -98,7 +90,7 @@ class Trainer:
                     for key in val_dicts[letter]:
                         wandb.run.summary[f'best_model/{key}'] = val_dicts[letter][key]
 
-                    query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
+                    query_results = random_query_results(similar_df, self.triplet_def[letter],
                                                          self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
                     wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
                               step=self._current_step)
@@ -165,7 +157,7 @@ class Trainer:
 
             wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)
-            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, lambda x: self._letter_positive_groups[letter][x])
+            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, self.triplet_def[letter])
 
             val_dict = {
                 f'{mode}/{ascii_letter}/loss': sum(val_losses) / len(val_losses),

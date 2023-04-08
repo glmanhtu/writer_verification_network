@@ -41,7 +41,7 @@ class TMDataset(Dataset):
             letters.setdefault(letter, {}).setdefault(tm, []).append(file)
 
         all_tms = set([x for y in letters for x in letters[y].keys()])
-        folds = list(chunks(list(all_tms), k_fold))
+        folds = list(chunks(sorted(list(all_tms)), k_fold))
         if is_train:
             del folds[fold]
             tm_keep = set([x for y in folds for x in y])

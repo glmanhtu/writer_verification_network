@@ -19,13 +19,13 @@ class BaseOptions:
                                                                   'φ', 'χ', 'ψ', 'ω'], nargs="+")
         self._parser.add_argument('--triplet_files', type=str, default=[], nargs='+')
         self._parser.add_argument('--ss_dim', type=int, default=512, help='Simsiam dim')
-        self._parser.add_argument('--ss_pred_dim', type=int, default=128, help='Simsiam pred dim')
-        self._parser.add_argument('--image_size', type=int, default=224, help='Input image size')
-        self._parser.add_argument('--batch_size', type=int, default=32, help='Input batch size')
+        self._parser.add_argument('--ss_pred_dim', type=int, default=1024, help='Simsiam pred dim')
+        self._parser.add_argument('--image_size', type=int, default=64, help='Input image size')
+        self._parser.add_argument('--batch_size', type=int, default=196, help='Input batch size')
         self._parser.add_argument('--optimizer', type=str, default='Adam')
         self._parser.add_argument('--cuda', action='store_true', help="Whether to use GPU")
         self._parser.add_argument('--resume', action='store_true', help="Whether to use GPU")
-        self._parser.add_argument('--arch', type=str, default='resnet50')
+        self._parser.add_argument('--arch', type=str, default='resnet18')
         self._parser.add_argument('--save_freq_iter', type=int, default=10,
                                   help='save the training losses to the summary writer every # iterations')
         self._parser.add_argument('--n_threads_train', default=8, type=int, help='# threads for loading data')
@@ -38,7 +38,7 @@ class BaseOptions:
         self._parser.add_argument('--wb_entity', type=str, default='glmanhtu', help='Wandb entity name')
         self._parser.add_argument('--wb_project', type=str, default='writer-verification-network', help='Wandb project')
         self._parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
-        self._parser.add_argument('--lr', type=float, default=4e-4,
+        self._parser.add_argument('--lr', type=float, default=1e-4,
                                   help="The initial learning rate")
         self._parser.add_argument('--dropout', type=float, default=0.5, help="Default dropout")
         self._parser.add_argument('--patch_bg_threshold', type=float, default=0.6,
@@ -46,11 +46,11 @@ class BaseOptions:
         self._parser.add_argument('--lr_policy', type=str, default='none', choices=['step', 'none'])
         self._parser.add_argument('--lr_decay_epochs', type=int, default=100,
                                   help='reduce the lr to 0.1*lr for every # epochs')
-        self._parser.add_argument('--n_epochs_per_eval', type=int, default=3,
+        self._parser.add_argument('--n_epochs_per_eval', type=int, default=10,
                                   help='Run eval every n training epochs')
         self._parser.add_argument('--weight_decay', type=float, default=0., help='weight decay')
         self._parser.add_argument('--nepochs', type=int, default=1000)
-        self._parser.add_argument('--early_stop', type=int, default=20)
+        self._parser.add_argument('--early_stop', type=int, default=10)
 
         self._initialized = True
 

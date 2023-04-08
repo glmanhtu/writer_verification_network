@@ -13,11 +13,7 @@ dest_tms = get_all_tms(args.dest)
 all_tms = set(list(source_tms) + list(dest_tms))
 
 # Collecting the group of positives and pairs of negatives
-dest_positive_groups, dest_negatives = load_triplet_file(args.dest, all_tms)
-dest_pos_map = {}
-for group in dest_positive_groups:
-    for tm in group:
-        dest_pos_map[tm] = group
+dest_pos_map, dest_negatives = load_triplet_file(args.dest, all_tms)
 
 # Collecting the group of positives and pairs of negatives
 source_positive_groups, source_negatives = load_triplet_file(args.source, all_tms)

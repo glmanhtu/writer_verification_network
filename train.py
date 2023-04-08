@@ -16,23 +16,17 @@ from utils.misc import EarlyStop, display_terminal, compute_similarity_matrix, g
 from utils.transform import get_transforms, val_transforms
 from utils.wb_utils import create_heatmap
 
-args = TrainOptions().parse()
-dir_path = os.path.dirname(os.path.realpath(__file__))
 
-wandb.init(group=args.group,
-           name=args.name,
-           project=args.wb_project,
-           entity=args.wb_entity,
-           resume=args.resume,
-           config=args,
-           mode=args.wb_mode)
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class Trainer:
-    def __init__(self, fold=0, k_fold=1):
+    def __init__(self, args, fold=0, k_fold=3):
         device = torch.device('cuda' if args.cuda else 'cpu')
+        self.args = args
 
-        self._working_dir = os.path.join(args.checkpoints_dir, args.name)
+        self._working_dir = os.path.join(args.checkpoints_dir, args.name, f'fold_{fold}')
+        os.makedirs(self._working_dir, exist_ok=True)
         self._model = ModelsFactory.get_model(args, self._working_dir, is_train=True, device=device,
                                               dropout=args.dropout)
         transforms = get_transforms(args.image_size)
@@ -79,14 +73,14 @@ class Trainer:
 
     def train(self):
         best_m_ap = 0.
-        for i_epoch in range(1, args.nepochs + 1):
+        for i_epoch in range(1, self.args.nepochs + 1):
             epoch_start_time = time.time()
             # train epoch
             self._train_epoch(i_epoch)
-            if args.lr_policy == 'step':
+            if self.args.lr_policy == 'step':
                 self._model.lr_scheduler.step()
 
-            if not i_epoch % args.n_epochs_per_eval == 0:
+            if not i_epoch % self.args.n_epochs_per_eval == 0:
                 continue
 
             current_m_ap, similarity_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val)
@@ -94,24 +88,25 @@ class Trainer:
             if current_m_ap > best_m_ap:
                 print("Average mAP improved, from {:.4f} to {:.4f}".format(best_m_ap, current_m_ap))
                 best_m_ap = current_m_ap
+                wandb.run.summary[f'best_model/avg_mAP'] = current_m_ap
                 self._model.save()  # save best model
                 for letter in similarity_matrices:
                     similar_df = similarity_matrices[letter]
                     ascii_letter = letter_ascii[letter]
                     similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{ascii_letter}.csv'),
                                       encoding='utf-8')
+                    for key in val_dicts[letter]:
+                        wandb.run.summary[f'best_model/{key}'] = val_dicts[letter][key]
 
                     query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
                                                          self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
                     wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
                               step=self._current_step)
-                    best_pred = {f'best_model/{k}': v for k, v in val_dicts[letter].items()}
-                    wandb.log(best_pred, step=self._current_step)
 
             # print epoch info
             time_epoch = time.time() - epoch_start_time
             print('End of epoch %d / %d \t Time Taken: %d sec (%d min or %d h)' %
-                  (i_epoch, args.nepochs, time_epoch, time_epoch / 60, time_epoch / 3600))
+                  (i_epoch, self.args.nepochs, time_epoch, time_epoch / 60, time_epoch / 3600))
 
             if self.early_stop.should_stop(1 - current_m_ap):
                 print(f'Early stop at epoch {i_epoch}')
@@ -130,7 +125,7 @@ class Trainer:
             # update epoch info
             self._current_step += 1
 
-            if self._current_step % args.save_freq_iter == 0:
+            if self._current_step % self.args.save_freq_iter == 0:
                 self._model.print_current_lr()
                 save_dict = {
                     'train/loss': sum(losses) / len(losses),
@@ -189,12 +184,21 @@ class Trainer:
 
 
 if __name__ == "__main__":
-    trainer = Trainer()
+    train_args = TrainOptions().parse()
+    wandb.init(group=train_args.group,
+               name=train_args.name,
+               project=train_args.wb_project,
+               entity=train_args.wb_entity,
+               resume=train_args.resume,
+               config=train_args,
+               mode=train_args.wb_mode)
+
+    trainer = Trainer(train_args)
     if trainer.is_trained():
         trainer.set_current_step(wandb.run.step)
         trainer.load_pretrained_model()
 
-    if args.resume or not trainer.is_trained():
+    if train_args.resume or not trainer.is_trained():
         trainer.train()
 
     trainer.load_pretrained_model()

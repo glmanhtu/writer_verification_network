@@ -115,7 +115,7 @@ def load_triplet_file(filter_file, all_tms):
     for tm in all_tms:
         add_items_to_group([tm], positive_groups)
         negative_pairs.setdefault(tm, set([]))
-    for current_tm in missing_tm:
-        print(f'TM {current_tm} is not available on the training dataset')
+    # for current_tm in missing_tm:
+    #     print(f'TM {current_tm} is not available on the training dataset')
 
     return positive_groups, negative_pairs

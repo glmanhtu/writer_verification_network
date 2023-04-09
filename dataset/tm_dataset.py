@@ -98,7 +98,7 @@ class TMDataset(Dataset):
         return len(self.data)
 
     def get_img_by_id(self, letter, tm):
-        img_file = random.choice(self.letters[letter][tm])
+        img_file = random.choice(self.letters[letter][tm][0])
         transforms = torchvision.transforms.Compose([
             MovingResize((64, 64), random_move=False),
             torchvision.transforms.Resize(224),

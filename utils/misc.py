@@ -121,6 +121,7 @@ def get_metrics(similarity_matrix, triplet_def):
         for col in similarity_matrix.columns:
             if col in positive_pairs[row]:
                 correct_retrievals[col][row] = 1
+                correct_retrievals[row][col] = 1
     correct_retrievals = correct_retrievals.to_numpy() > 0
     distance_matrix = 1 - similarity_matrix.to_numpy()
     precision_at, recall_at, sorted_retrievals = wi19_evaluate.get_precision_recall_matrices(

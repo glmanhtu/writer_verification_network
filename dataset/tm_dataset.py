@@ -34,7 +34,7 @@ class TMDataset(Dataset):
             if width < 16 or height < 16:
                 excluded.setdefault('small_size', []).append(file)
                 continue
-            if '_ex.png' in file:
+            if '_ex.' in file:
                 if os.path.exists(file.replace('_ex', '')):
                     excluded.setdefault('_ex', []).append(file)
                     continue

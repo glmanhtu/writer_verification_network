@@ -20,9 +20,9 @@ class TripletNetwork(nn.Module):
         # Modify the average pooling layer to use a smaller kernel size
         self.encoder.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-    def forward(self, batch_data):
-        positive = batch_data['positive'].to(self._device, non_blocking=True)
-        anchor = batch_data['anchor'].to(self._device, non_blocking=True)
+    def forward(self, batch_data, device):
+        positive = batch_data['positive'].to(device, non_blocking=True)
+        anchor = batch_data['anchor'].to(device, non_blocking=True)
 
         anc = self.encoder(anchor)
         pos = self.encoder(positive)
@@ -30,7 +30,7 @@ class TripletNetwork(nn.Module):
         if not self.training:
             return torch.tensor(0), (anc, pos)
 
-        negative = batch_data['negative'].to(self._device, non_blocking=True)
+        negative = batch_data['negative'].to(device, non_blocking=True)
         neg = self.encoder(negative)
 
         loss = criterion(anc, pos, neg)

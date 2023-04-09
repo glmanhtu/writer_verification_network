@@ -111,7 +111,7 @@ class ModelWrapper:
             if self._args.network == 'simsiam':
                 return self._model(x1=positive_images, x2=anchor_images)
             else:
-                return self._model(batch_data)
+                return self._model(batch_data, self._device)
 
     def optimise_params(self, loss):
         self._optimizer.zero_grad()

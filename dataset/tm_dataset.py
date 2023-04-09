@@ -19,7 +19,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 class TMDataset(Dataset):
 
     def __init__(self, dataset_path: str, transforms, train_letters, is_train=False, fold=1, k_fold=3,
-                 with_likely=False, supervised_training=False):
+                 with_likely=False, supervised_training=False, triplet=False):
         self.dataset_path = dataset_path
         assert os.path.isdir(self.dataset_path)
         image_pattern = os.path.join(dataset_path, '**', '*.png')
@@ -63,11 +63,6 @@ class TMDataset(Dataset):
                 del letters[letter]
         print(f'Image Deleted: {", ".join(f"{k}: {len(v)}" for k, v in excluded.items())}')
         self.letters = letters
-        self.data = []
-        for letter in letters:
-            for tm in letters[letter]:
-                for anchor in letters[letter][tm]:
-                    self.data.append((letter, tm, anchor))
 
         root_dir = os.path.dirname(dir_path)
         triplet_def = {
@@ -80,8 +75,16 @@ class TMDataset(Dataset):
         for letter in triplet_def:
             self.positive_def[letter], self.negative_def[letter] = triplet_def[letter]
 
+        self.data = []
+        for letter in letters:
+            for tm in letters[letter]:
+                for anchor in letters[letter][tm]:
+                    if triplet and len(self.negative_def[letter][tm]) == 0:
+                        continue
+                    self.data.append((letter, tm, anchor))
         self.transforms = transforms
         self.supervised_training = supervised_training
+        self.triplet_training_mode = triplet
 
     def __len__(self):
         return len(self.data)
@@ -114,10 +117,21 @@ class TMDataset(Dataset):
         with Image.open(random.choice(positive_samples)) as img:
             positive_img = self.transforms(img)
 
-        return {
+        result = {
             "positive": positive_img,
             "anchor": anchor_img,
             "letter": letter,
             "tm": tm,
             "pos_tm": target_tm
         }
+
+        if self.triplet_training_mode:
+            negative_tm = random.choice(tuple(self.negative_def[letter][tm]))
+            with Image.open(random.choice(self.letters[letter][negative_tm])) as img:
+                negative_img = self.transforms(img)
+            result['negative'] = negative_img
+            result['neg_tm'] = negative_tm
+
+        return result
+
+

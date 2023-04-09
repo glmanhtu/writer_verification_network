@@ -30,6 +30,7 @@ class BaseOptions:
         self._parser.add_argument('--supervised', action='store_true',
                                   help="Whether to train the network with supervised learning")
         self._parser.add_argument('--arch', type=str, default='resnet18')
+        self._parser.add_argument('--network', type=str, default='simsiam', choices=['simsiam', 'triplet'])
         self._parser.add_argument('--save_freq_iter', type=int, default=10,
                                   help='save the training losses to the summary writer every # iterations')
         self._parser.add_argument('--n_threads_train', default=8, type=int, help='# threads for loading data')

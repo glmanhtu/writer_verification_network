@@ -27,14 +27,17 @@ class Trainer:
         self._model = ModelsFactory.get_model(args, self._working_dir, is_train=True, device=device,
                                               dropout=args.dropout)
         transforms = get_transforms(args.image_size)
+        is_triplet = args.network == 'triplet'
         dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters, is_train=True, fold=fold,
-                                  k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised)
+                                  k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised,
+                                  triplet=is_triplet)
         self.data_loader_train = DataLoader(dataset_train, shuffle=True, num_workers=args.n_threads_train,
                                             batch_size=args.batch_size, drop_last=True, persistent_workers=True,
                                             pin_memory=True)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
-                                k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised)
+                                k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised,
+                                triplet=is_triplet)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
                                           persistent_workers=True, pin_memory=True, batch_size=args.batch_size)
@@ -102,7 +105,7 @@ class Trainer:
         for i_train_batch, train_batch in enumerate(self.data_loader_train):
             iter_start_time = time.time()
 
-            train_loss, _ = self._model.compute_loss(train_batch)
+            train_loss, _ = self._model(train_batch)
             self._model.optimise_params(train_loss)
             losses.append(train_loss.item() + 1)    # negative cosine similarity has range [-1, 1]
 
@@ -132,7 +135,7 @@ class Trainer:
         letter_features = {}
         for i in range(n_time_validates):
             for i_train_batch, batch in enumerate(val_loader):
-                val_loss, (pos_features, anc_features) = self._model.compute_loss(batch)
+                val_loss, (pos_features, anc_features) = self._model(batch)
                 val_losses.append(val_loss.item() + 1)  # negative cosine similarity has range [-1, 1]
                 self.add_features(letter_features, batch['letter'], batch['pos_tm'], pos_features)
                 self.add_features(letter_features, batch['letter'], batch['tm'], anc_features)

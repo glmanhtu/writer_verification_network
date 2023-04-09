@@ -8,6 +8,9 @@ import torch
 import torch.nn as nn
 
 
+criterion = nn.CosineSimilarity(dim=1)
+
+
 class SimSiam(nn.Module):
     """
     Build a SimSiam model.
@@ -60,4 +63,8 @@ class SimSiam(nn.Module):
         p1 = self.predictor(z1) # NxC
         p2 = self.predictor(z2) # NxC
 
-        return p1, p2, z1.detach(), z2.detach()
+        z1 = z1.detach()
+        z2 = z2.detach()
+
+        loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
+        return loss, (z1, z2)

@@ -19,7 +19,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 class TMDataset(Dataset):
 
     def __init__(self, dataset_path: str, transforms, train_letters, is_train=False, fold=1, k_fold=3,
-                 with_likely=False, supervised_training=False, triplet=False):
+                 with_likely=False, supervised_training=False, triplet=False, n_samples_per_tm=8):
         self.dataset_path = dataset_path
         self.is_train = is_train
         assert os.path.isdir(self.dataset_path)
@@ -62,7 +62,14 @@ class TMDataset(Dataset):
 
             if len(letters[letter]) == 0:
                 del letters[letter]
+
         print(f'Image Deleted: {", ".join(f"{k}: {len(v)}" for k, v in excluded.items())}')
+
+        for letter in letters:
+            for tm in letters[letter]:
+                letters[letter][tm] = list(chunks(letters[letter][tm], n_samples_per_tm))
+                letters[letter][tm] = [x for x in letters[letter][tm] if len(x) > 0]
+
         self.letters = letters
 
         root_dir = os.path.dirname(dir_path)
@@ -79,10 +86,10 @@ class TMDataset(Dataset):
         self.data = []
         for letter in letters:
             for tm in letters[letter]:
-                for anchor in letters[letter][tm]:
-                    if triplet and is_train and len(self.negative_def[letter][tm]) == 0:
-                        continue
-                    self.data.append((letter, tm, anchor))
+                if triplet and is_train and len(self.negative_def[letter][tm]) == 0:
+                    continue
+                for idx, anchor_bucket in enumerate(letters[letter][tm]):
+                    self.data.append((letter, tm, idx))
         self.transforms = transforms
         self.supervised_training = supervised_training
         self.triplet_training_mode = triplet
@@ -102,18 +109,19 @@ class TMDataset(Dataset):
             return transforms(img)
 
     def __getitem__(self, idx):
-        (letter, tm, anchor) = self.data[idx]
+        (letter, tm, anchor_bucket_idx) = self.data[idx]
 
+        anchor = random.choice(self.letters[letter][tm][anchor_bucket_idx])
         with Image.open(anchor) as img:
             anchor_img = self.transforms(img)
 
         target_tm = tm
         if self.supervised_training:
             target_tm = random.choice(tuple(self.positive_def[letter][tm]))
-
-        positive_samples = self.letters[letter][target_tm].copy()
-        if anchor in positive_samples:
-            positive_samples.remove(anchor)
+            positive_samples = random.choice(self.letters[letter][target_tm])
+        else:
+            pos_id = random.choice([x for x in range(len(self.letters[letter][target_tm])) if x != anchor_bucket_idx])
+            positive_samples = self.letters[letter][target_tm][pos_id]
 
         with Image.open(random.choice(positive_samples)) as img:
             positive_img = self.transforms(img)
@@ -128,7 +136,8 @@ class TMDataset(Dataset):
 
         if self.triplet_training_mode and self.is_train:
             negative_tm = random.choice(tuple(self.negative_def[letter][tm]))
-            with Image.open(random.choice(self.letters[letter][negative_tm])) as img:
+            negative_samples = random.choice(self.letters[letter][negative_tm])
+            with Image.open(random.choice(negative_samples)) as img:
                 negative_img = self.transforms(img)
             result['negative'] = negative_img
             result['neg_tm'] = negative_tm

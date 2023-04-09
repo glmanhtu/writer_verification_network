@@ -35,9 +35,7 @@ class TMDataset(Dataset):
                 excluded.setdefault('small_size', []).append(file)
                 continue
             if '_ex.png' in file:
-                if not os.path.exists(file.replace('_ex', '')):
-                    print(file)
-                else:
+                if os.path.exists(file.replace('_ex', '')):
                     excluded.setdefault('_ex', []).append(file)
                     continue
 

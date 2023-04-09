@@ -119,7 +119,7 @@ def get_metrics(similarity_matrix, triplet_def):
     correct_retrievals = similarity_matrix.copy(deep=True) * 0
     for row in similarity_matrix.index:
         for col in similarity_matrix.columns:
-            if row == col or col in positive_pairs[row]:
+            if col in positive_pairs[row]:
                 correct_retrievals[col][row] = 1
     correct_retrievals = correct_retrievals.to_numpy() > 0
     distance_matrix = 1 - similarity_matrix.to_numpy()

@@ -31,7 +31,7 @@ class TMDataset(Dataset):
             if letter not in train_letters:
                 continue
             width, height = imagesize.get(file)
-            if width < 32 or height < 32:
+            if width < 16 or height < 16:
                 excluded.setdefault('small_size', []).append(file)
                 continue
             if '_ex.png' in file:

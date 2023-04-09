@@ -121,7 +121,7 @@ def load_triplet_file(filter_file, all_tms, with_likely=False):
                 positive_pairs.setdefault(tm, set([])).add(tm2)
 
     for tm in all_tms:
-        positive_pairs.setdefault(tm, set([]))
+        positive_pairs.setdefault(tm, {tm})
         negative_pairs.setdefault(tm, set([]))
     # for current_tm in missing_tm:
     #     print(f'TM {current_tm} is not available on the training dataset')

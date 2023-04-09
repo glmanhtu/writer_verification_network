@@ -21,6 +21,7 @@ class TMDataset(Dataset):
     def __init__(self, dataset_path: str, transforms, train_letters, is_train=False, fold=1, k_fold=3,
                  with_likely=False, supervised_training=False, triplet=False):
         self.dataset_path = dataset_path
+        self.is_train = is_train
         assert os.path.isdir(self.dataset_path)
         image_pattern = os.path.join(dataset_path, '**', '*.png')
         files = glob.glob(image_pattern, recursive=True)
@@ -79,7 +80,7 @@ class TMDataset(Dataset):
         for letter in letters:
             for tm in letters[letter]:
                 for anchor in letters[letter][tm]:
-                    if triplet and len(self.negative_def[letter][tm]) == 0:
+                    if triplet and is_train and len(self.negative_def[letter][tm]) == 0:
                         continue
                     self.data.append((letter, tm, anchor))
         self.transforms = transforms
@@ -125,7 +126,7 @@ class TMDataset(Dataset):
             "pos_tm": target_tm
         }
 
-        if self.triplet_training_mode:
+        if self.triplet_training_mode and self.is_train:
             negative_tm = random.choice(tuple(self.negative_def[letter][tm]))
             with Image.open(random.choice(self.letters[letter][negative_tm])) as img:
                 negative_img = self.transforms(img)

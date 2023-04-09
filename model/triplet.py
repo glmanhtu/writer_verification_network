@@ -1,6 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 # All rights reserved.
-
+import torch
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
@@ -23,6 +23,10 @@ class TripletNetwork(nn.Module):
     def forward(self, anchor, positive, negative):
         anc = self.encoder(anchor)
         pos = self.encoder(positive)
+
+        if not self.training:
+            return torch.tensor(0), (anc, pos)
+
         neg = self.encoder(negative)
 
         loss = criterion(anc, pos, neg)

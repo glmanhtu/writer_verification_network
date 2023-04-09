@@ -87,7 +87,7 @@ def get_all_tms(triplet_file):
     return set(all_tms)
 
 
-def load_triplet_file(filter_file, all_tms):
+def load_triplet_file(filter_file, all_tms, with_likely=False):
     all_tms = set(all_tms)
     with open(filter_file) as f:
         triplet_filter = json.load(f)
@@ -111,7 +111,7 @@ def load_triplet_file(filter_file, all_tms):
                 negative_pairs.setdefault(second_tm, set([])).add(current_tm)
             if relationship == 1:
                 add_items_to_group([current_tm, second_tm], positive_groups)
-            if relationship == 2:
+            if with_likely and relationship == 2:
                 positive_pairs.setdefault(current_tm, set([])).add(second_tm)
                 positive_pairs.setdefault(second_tm, set([])).add(current_tm)
 

@@ -47,9 +47,12 @@ class Trainer:
         print("Validating sets: {} images".format(len(dataset_val)))
 
         self.triplet_def = {
-            'α': load_triplet_file(os.path.join(dir_path, 'BT120220128.triplet'), dataset_val.letters['α'].keys()),
-            'ε': load_triplet_file(os.path.join(dir_path, 'Eps20220408.triplet'), dataset_val.letters['ε'].keys()),
-            'μ': load_triplet_file(os.path.join(dir_path, 'mtest.triplet'), dataset_val.letters['μ'].keys()),
+            'α': load_triplet_file(os.path.join(dir_path, 'BT120220128.triplet'),
+                                   dataset_val.letters['α'].keys(), args.with_likely),
+            'ε': load_triplet_file(os.path.join(dir_path, 'Eps20220408.triplet'),
+                                   dataset_val.letters['ε'].keys(), args.with_likely),
+            'μ': load_triplet_file(os.path.join(dir_path, 'mtest.triplet'),
+                                   dataset_val.letters['μ'].keys(), args.with_likely),
         }
 
         self._current_step = 0

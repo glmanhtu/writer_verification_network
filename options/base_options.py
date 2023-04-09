@@ -25,6 +25,7 @@ class BaseOptions:
         self._parser.add_argument('--optimizer', type=str, default='Adam')
         self._parser.add_argument('--mode', type=str, default='Testing')
         self._parser.add_argument('--cuda', action='store_true', help="Whether to use GPU")
+        self._parser.add_argument('--with_likely', action='store_true', help="Whether to use Likely ground truth")
         self._parser.add_argument('--resume', action='store_true', help="Whether to use GPU")
         self._parser.add_argument('--arch', type=str, default='resnet18')
         self._parser.add_argument('--save_freq_iter', type=int, default=10,

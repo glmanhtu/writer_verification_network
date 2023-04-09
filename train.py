@@ -66,7 +66,8 @@ class Trainer:
             if not i_epoch % self.args.n_epochs_per_eval == 0:
                 continue
 
-            current_m_ap, similarity_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val)
+            current_m_ap, similarity_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val,
+                                                                          n_time_validates=5)
 
             if current_m_ap > best_m_ap:
                 print("Average mAP improved, from {:.4f} to {:.4f}".format(best_m_ap, current_m_ap))

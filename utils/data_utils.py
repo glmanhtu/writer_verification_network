@@ -24,7 +24,6 @@ def padding_image(img, new_size, color=(0, 0, 0)):
     return result
 
 
-
 def resize_image(image: Image.Image, scale_factor: float) -> Image.Image:
     """Resize image by scale factor."""
     if scale_factor == 1:

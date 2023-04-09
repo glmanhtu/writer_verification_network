@@ -27,6 +27,8 @@ class BaseOptions:
         self._parser.add_argument('--cuda', action='store_true', help="Whether to use GPU")
         self._parser.add_argument('--with_likely', action='store_true', help="Whether to use Likely ground truth")
         self._parser.add_argument('--resume', action='store_true', help="Whether to use GPU")
+        self._parser.add_argument('--supervised', action='store_true',
+                                  help="Whether to train the network with supervised learning")
         self._parser.add_argument('--arch', type=str, default='resnet18')
         self._parser.add_argument('--save_freq_iter', type=int, default=10,
                                   help='save the training losses to the summary writer every # iterations')

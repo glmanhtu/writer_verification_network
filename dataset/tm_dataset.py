@@ -9,15 +9,17 @@ import torchvision
 from PIL import Image
 from torch.utils.data import Dataset
 
-from utils.data_utils import chunks
+from utils.data_utils import chunks, load_triplet_file
 from utils.transform import MovingResize
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 class TMDataset(Dataset):
 
-    def __init__(self, dataset_path: str, transforms, train_letters, is_train=False, fold=1, k_fold=3):
+    def __init__(self, dataset_path: str, transforms, train_letters, is_train=False, fold=1, k_fold=3,
+                 with_likely=False, supervised_training=False):
         self.dataset_path = dataset_path
         assert os.path.isdir(self.dataset_path)
         image_pattern = os.path.join(dataset_path, '**', '*.png')
@@ -66,7 +68,20 @@ class TMDataset(Dataset):
             for tm in letters[letter]:
                 for anchor in letters[letter][tm]:
                     self.data.append((letter, tm, anchor))
+
+        root_dir = os.path.dirname(dir_path)
+        triplet_def = {
+            'α': load_triplet_file(os.path.join(root_dir, 'BT120220128.triplet'), letters['α'].keys(), with_likely),
+            'ε': load_triplet_file(os.path.join(root_dir, 'Eps20220408.triplet'), letters['ε'].keys(), with_likely),
+            'μ': load_triplet_file(os.path.join(root_dir, 'mtest.triplet'), letters['μ'].keys(), with_likely),
+        }
+        self.triplet_def = triplet_def
+        self.positive_def, self.negative_def = {}, {}
+        for letter in triplet_def:
+            self.positive_def[letter], self.negative_def[letter] = triplet_def[letter]
+
         self.transforms = transforms
+        self.supervised_training = supervised_training
 
     def __len__(self):
         return len(self.data)
@@ -88,8 +103,13 @@ class TMDataset(Dataset):
         with Image.open(anchor) as img:
             anchor_img = self.transforms(img)
 
-        positive_samples = self.letters[letter][tm].copy()
-        positive_samples.remove(anchor)
+        target_tm = tm
+        if self.supervised_training:
+            target_tm = random.choice(tuple(self.positive_def[letter][tm]))
+
+        positive_samples = self.letters[letter][target_tm].copy()
+        if anchor in positive_samples:
+            positive_samples.remove(anchor)
 
         with Image.open(random.choice(positive_samples)) as img:
             positive_img = self.transforms(img)
@@ -98,5 +118,6 @@ class TMDataset(Dataset):
             "positive": positive_img,
             "anchor": anchor_img,
             "letter": letter,
-            "tm": tm
+            "tm": tm,
+            "pos_tm": target_tm
         }

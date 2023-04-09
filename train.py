@@ -17,9 +17,6 @@ from utils.transform import get_transforms, val_transforms
 from utils.wb_utils import create_heatmap
 
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-
 class Trainer:
     def __init__(self, args, fold=0, k_fold=3):
         device = torch.device('cuda' if args.cuda else 'cpu')
@@ -31,13 +28,13 @@ class Trainer:
                                               dropout=args.dropout)
         transforms = get_transforms(args.image_size)
         dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters, is_train=True, fold=fold,
-                                  k_fold=k_fold)
+                                  k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised)
         self.data_loader_train = DataLoader(dataset_train, shuffle=True, num_workers=args.n_threads_train,
                                             batch_size=args.batch_size, drop_last=True, persistent_workers=True,
                                             pin_memory=True)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
-                                k_fold=k_fold)
+                                k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
                                           persistent_workers=True, pin_memory=True, batch_size=args.batch_size)
@@ -45,15 +42,6 @@ class Trainer:
         self.early_stop = EarlyStop(args.early_stop)
         print("Training sets: {} images".format(len(dataset_train)))
         print("Validating sets: {} images".format(len(dataset_val)))
-
-        self.triplet_def = {
-            'α': load_triplet_file(os.path.join(dir_path, 'BT120220128.triplet'),
-                                   dataset_val.letters['α'].keys(), args.with_likely),
-            'ε': load_triplet_file(os.path.join(dir_path, 'Eps20220408.triplet'),
-                                   dataset_val.letters['ε'].keys(), args.with_likely),
-            'μ': load_triplet_file(os.path.join(dir_path, 'mtest.triplet'),
-                                   dataset_val.letters['μ'].keys(), args.with_likely),
-        }
 
         self._current_step = 0
 
@@ -93,7 +81,7 @@ class Trainer:
                     for key in val_dicts[letter]:
                         wandb.run.summary[f'best_model/{key}'] = val_dicts[letter][key]
 
-                    query_results = random_query_results(similar_df, self.triplet_def[letter],
+                    query_results = random_query_results(similar_df, self.data_loader_val.dataset.triplet_def[letter],
                                                          self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
                     wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
                               step=self._current_step)
@@ -145,7 +133,7 @@ class Trainer:
             for i_train_batch, batch in enumerate(val_loader):
                 val_loss, (pos_features, anc_features) = self._model.compute_loss(batch)
                 val_losses.append(val_loss.item() + 1)  # negative cosine similarity has range [-1, 1]
-                self.add_features(letter_features, batch['letter'], batch['tm'], pos_features)
+                self.add_features(letter_features, batch['letter'], batch['pos_tm'], pos_features)
                 self.add_features(letter_features, batch['letter'], batch['tm'], anc_features)
             print(f'Finished the evaluating {i + 1}/{n_time_validates}')
 
@@ -160,7 +148,7 @@ class Trainer:
 
             wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)
-            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, self.triplet_def[letter])
+            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, val_loader.dataset.triplet_def[letter])
 
             val_dict = {
                 f'{mode}/{ascii_letter}/loss': sum(val_losses) / len(val_losses),

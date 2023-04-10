@@ -14,7 +14,7 @@ from utils.data_utils import resize_image, padding_image
 def get_transforms(img_size):
     return torchvision.transforms.Compose([
         torchvision.transforms.RandomApply([
-            torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.2),
+            torchvision.transforms.ColorJitter(brightness=0.1, contrast=0.3, saturation=0.3, hue=0.2),
         ], p=0.5),
         MovingResize((img_size, img_size), random_move=True),
         RandomResize(img_size),

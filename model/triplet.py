@@ -34,4 +34,4 @@ class TripletNetwork(nn.Module):
         neg = self.encoder(negative)
 
         loss = criterion(anc, pos, neg)
-        return loss, (anc, pos)
+        return loss, (pos, anc)

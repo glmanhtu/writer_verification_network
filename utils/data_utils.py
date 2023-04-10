@@ -108,6 +108,9 @@ def load_triplet_file(filter_file, all_tms, with_likely=False):
             if relationship == 4:
                 negative_pairs.setdefault(current_tm, set([])).add(second_tm)
                 negative_pairs.setdefault(second_tm, set([])).add(current_tm)
+            if with_likely and relationship == 3:
+                negative_pairs.setdefault(current_tm, set([])).add(second_tm)
+                negative_pairs.setdefault(second_tm, set([])).add(current_tm)
             if relationship == 1:
                 add_items_to_group([current_tm, second_tm], positive_groups)
             if with_likely and relationship == 2:

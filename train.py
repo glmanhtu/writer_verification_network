@@ -62,9 +62,9 @@ class Trainer:
         for i_epoch in range(1, self.args.nepochs + 1):
             epoch_start_time = time.time()
             # train epoch
-            self._train_epoch(i_epoch)
-            if self.args.lr_policy == 'step':
-                self._model.lr_scheduler.step()
+            # self._train_epoch(i_epoch)
+            # if self.args.lr_policy == 'step':
+            #     self._model.lr_scheduler.step()
 
             if not i_epoch % self.args.n_epochs_per_eval == 0:
                 continue
@@ -119,10 +119,9 @@ class Trainer:
                 display_terminal(iter_start_time, i_epoch, i_train_batch, len(self.data_loader_train), save_dict)
 
     @staticmethod
-    def add_features(letter_features, letters, tm_features, features):
-        for letter, tm, features in zip(letters, tm_features, features):
-            feature_detach = features.detach()
-            letter_features.setdefault(letter, {}).setdefault(tm, []).append(feature_detach)
+    def add_features(letter_features, letters, tm_features, all_features):
+        for letter, tm, features in zip(letters, tm_features, all_features.detach()):
+            letter_features.setdefault(letter, {}).setdefault(tm, []).append(features)
 
     def _validate(self, i_epoch, val_loader, mode='val', n_time_validates=1):
         val_start_time = time.time()

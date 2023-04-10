@@ -22,7 +22,7 @@ def get_transforms(img_size):
         #     torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
         # ], p=0.5),
         # torchvision.transforms.RandomHorizontalFlip(),
-        torchvision.transforms.RandomGrayscale(p=0.3),
+        torchvision.transforms.RandomGrayscale(p=1),
         torchvision.transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -31,6 +31,7 @@ def get_transforms(img_size):
 def val_transforms(img_size):
     return torchvision.transforms.Compose([
         MovingResize((img_size, img_size), random_move=False),
+        torchvision.transforms.RandomGrayscale(p=1),
         torchvision.transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])

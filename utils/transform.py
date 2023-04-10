@@ -2,6 +2,7 @@ import random
 
 import cv2
 import numpy as np
+import torch
 import torchvision.transforms
 import torchvision.transforms
 from PIL import ImageOps, Image
@@ -16,6 +17,7 @@ def get_transforms(img_size):
             torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.2),
         ], p=0.5),
         MovingResize((img_size, img_size), random_move=True),
+        RandomResize(img_size),
         # torchvision.transforms.RandomApply([
         #     torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
         # ], p=0.5),
@@ -68,6 +70,32 @@ class MovingResize:
         result = Image.new(mode="RGB", size=(self.img_width, self.img_height), color=(255, 255, 255))
         result.paste(image, box=(int(mov * (self.img_width - width)), int(mov * (self.img_height - height))))
         return result
+
+
+class RandomResize:
+    def __init__(self, im_size, p=0.5, threshold=(0.8, 1.2)):
+        self.p = p
+        self.threshold = threshold
+        self.im_size = im_size
+        self.cropper = torchvision.transforms.RandomCrop(im_size)
+
+    def __call__(self, img):
+        if self.p < torch.rand(1):
+            return img
+
+        factor = random.randint(int(self.threshold[0] * 10), int(self.threshold[1] * 10)) / 10.
+        new_img = resize_image(img, factor).convert('RGB')
+        if new_img.width > self.im_size:
+            return self.cropper(new_img)
+        mov_w = random.randint(0, 100) / 100.
+        mov_h = random.randint(0, 100) / 100.
+
+        result = Image.new(mode="RGB", size=(self.im_size, self.im_size), color=(255, 255, 255))
+        result.paste(new_img, box=(int(mov_w * (self.im_size - new_img.width)),
+                                   int(mov_h * (self.im_size - new_img.height))))
+        return result
+
+
 
 
 class RandomBinarizeThreshold:

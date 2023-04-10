@@ -62,9 +62,9 @@ class Trainer:
         for i_epoch in range(1, self.args.nepochs + 1):
             epoch_start_time = time.time()
             # train epoch
-            # self._train_epoch(i_epoch)
-            # if self.args.lr_policy == 'step':
-            #     self._model.lr_scheduler.step()
+            self._train_epoch(i_epoch)
+            if self.args.lr_policy == 'step':
+                self._model.lr_scheduler.step()
 
             if not i_epoch % self.args.n_epochs_per_eval == 0:
                 continue

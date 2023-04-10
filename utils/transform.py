@@ -12,12 +12,10 @@ from utils.data_utils import resize_image, padding_image
 
 def get_transforms(img_size):
     return torchvision.transforms.Compose([
-        MovingResize((64, 64), random_move=True),
-        torchvision.transforms.Resize(int(img_size * 1.2)),
-        torchvision.transforms.RandomCrop(img_size),
         torchvision.transforms.RandomApply([
-            torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+            torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.2),
         ], p=0.5),
+        MovingResize((img_size, img_size), random_move=True),
         # torchvision.transforms.RandomApply([
         #     torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
         # ], p=0.5),
@@ -30,9 +28,7 @@ def get_transforms(img_size):
 
 def val_transforms(img_size):
     return torchvision.transforms.Compose([
-        MovingResize((64, 64), random_move=False),
-        torchvision.transforms.Resize(int(img_size * 1.2)),
-        torchvision.transforms.CenterCrop(img_size),
+        MovingResize((img_size, img_size), random_move=False),
         torchvision.transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])

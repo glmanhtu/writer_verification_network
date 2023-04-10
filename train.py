@@ -85,10 +85,7 @@ class Trainer:
                     for key in val_dicts[letter]:
                         wandb.run.summary[f'best_model/{key}'] = val_dicts[letter][key]
 
-                    query_results = random_query_results(similar_df, self.data_loader_val.dataset.triplet_def[letter],
-                                                         self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
-                    wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
-                              step=self._current_step)
+
 
             # print epoch info
             time_epoch = time.time() - epoch_start_time
@@ -166,6 +163,11 @@ class Trainer:
             all_m_ap.append(m_ap)
             similarity_matrices[letter] = similar_df
             val_dicts[letter] = val_dict
+
+            query_results = random_query_results(similar_df, val_loader.dataset.triplet_def[letter],
+                                                 self.data_loader_val.dataset, letter, n_queries=5, top_k=10)
+            wandb.log({f'val/predictions/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=10)},
+                      step=self._current_step)
 
         return sum(all_m_ap) / len(all_m_ap), similarity_matrices, val_dicts
 

@@ -166,8 +166,7 @@ class Trainer:
 
             query_results = random_query_results(similar_df, val_loader.dataset.triplet_def[letter],
                                                  self.data_loader_val.dataset, letter, n_queries=5, top_k=10)
-            wandb.log({f'val/predictions/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=10)},
-                      step=self._current_step)
+            wandb.run.summary[f'val/predictions/{ascii_letter}'] = wb_utils.generate_query_table(query_results, top_k=10)
 
         return sum(all_m_ap) / len(all_m_ap), similarity_matrices, val_dicts
 

@@ -103,15 +103,15 @@ class ModelWrapper:
         self._model.eval()
         self._is_train = False
 
-    def compute_loss(self, batch_data):
+    def __call__(self, batch_data):
         positive_images = batch_data['positive'].to(self._device, non_blocking=True)
         anchor_images = batch_data['anchor'].to(self._device, non_blocking=True)
 
-        criterion = nn.CosineSimilarity(dim=1)
         with torch.set_grad_enabled(self._is_train):
-            p1, p2, z1, z2 = self._model(x1=positive_images, x2=anchor_images)
-            loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
-            return loss, (z1, z2)
+            if self._args.network == 'simsiam':
+                return self._model(x1=positive_images, x2=anchor_images)
+            else:
+                return self._model(batch_data, self._device)
 
     def optimise_params(self, loss):
         self._optimizer.zero_grad()

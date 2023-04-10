@@ -17,9 +17,6 @@ from utils.transform import get_transforms, val_transforms
 from utils.wb_utils import create_heatmap
 
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-
 class Trainer:
     def __init__(self, args, fold=0, k_fold=3):
         device = torch.device('cuda' if args.cuda else 'cpu')
@@ -30,14 +27,17 @@ class Trainer:
         self._model = ModelsFactory.get_model(args, self._working_dir, is_train=True, device=device,
                                               dropout=args.dropout)
         transforms = get_transforms(args.image_size)
+        is_triplet = args.network == 'triplet'
         dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters, is_train=True, fold=fold,
-                                  k_fold=k_fold)
+                                  k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised,
+                                  triplet=is_triplet, n_samples_per_tm=args.n_samples_per_tm)
         self.data_loader_train = DataLoader(dataset_train, shuffle=True, num_workers=args.n_threads_train,
                                             batch_size=args.batch_size, drop_last=True, persistent_workers=True,
                                             pin_memory=True)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
-                                k_fold=k_fold)
+                                k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised,
+                                triplet=is_triplet, n_samples_per_tm=999)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
                                           persistent_workers=True, pin_memory=True, batch_size=args.batch_size)
@@ -46,20 +46,6 @@ class Trainer:
         print("Training sets: {} images".format(len(dataset_train)))
         print("Validating sets: {} images".format(len(dataset_val)))
 
-        self.triplet_def = {
-            'α': load_triplet_file(os.path.join(dir_path, 'BT120220128.triplet'), dataset_val.letters['α'].keys()),
-            'ε': load_triplet_file(os.path.join(dir_path, 'Eps20220408.triplet'), dataset_val.letters['ε'].keys()),
-            'μ': load_triplet_file(os.path.join(dir_path, 'mtest.triplet'), dataset_val.letters['μ'].keys()),
-        }
-
-        self._letter_positive_groups = {}
-        for letter in self.triplet_def:
-            positive_groups = self.triplet_def[letter][0]
-            tms = {}
-            for idx, group in enumerate(positive_groups):
-                for tm in group:
-                    tms[tm] = idx
-            self._letter_positive_groups[letter] = tms
         self._current_step = 0
 
     def is_trained(self):
@@ -83,7 +69,8 @@ class Trainer:
             if not i_epoch % self.args.n_epochs_per_eval == 0:
                 continue
 
-            current_m_ap, similarity_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val)
+            current_m_ap, similarity_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val,
+                                                                          n_time_validates=5)
 
             if current_m_ap > best_m_ap:
                 print("Average mAP improved, from {:.4f} to {:.4f}".format(best_m_ap, current_m_ap))
@@ -98,7 +85,7 @@ class Trainer:
                     for key in val_dicts[letter]:
                         wandb.run.summary[f'best_model/{key}'] = val_dicts[letter][key]
 
-                    query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
+                    query_results = random_query_results(similar_df, self.data_loader_val.dataset.triplet_def[letter],
                                                          self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
                     wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
                               step=self._current_step)
@@ -118,7 +105,7 @@ class Trainer:
         for i_train_batch, train_batch in enumerate(self.data_loader_train):
             iter_start_time = time.time()
 
-            train_loss, _ = self._model.compute_loss(train_batch)
+            train_loss, _ = self._model(train_batch)
             self._model.optimise_params(train_loss)
             losses.append(train_loss.item() + 1)    # negative cosine similarity has range [-1, 1]
 
@@ -148,9 +135,9 @@ class Trainer:
         letter_features = {}
         for i in range(n_time_validates):
             for i_train_batch, batch in enumerate(val_loader):
-                val_loss, (pos_features, anc_features) = self._model.compute_loss(batch)
+                val_loss, (pos_features, anc_features) = self._model(batch)
                 val_losses.append(val_loss.item() + 1)  # negative cosine similarity has range [-1, 1]
-                self.add_features(letter_features, batch['letter'], batch['tm'], pos_features)
+                self.add_features(letter_features, batch['letter'], batch['pos_tm'], pos_features)
                 self.add_features(letter_features, batch['letter'], batch['tm'], anc_features)
             print(f'Finished the evaluating {i + 1}/{n_time_validates}')
 
@@ -165,7 +152,7 @@ class Trainer:
 
             wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)
-            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, lambda x: self._letter_positive_groups[letter][x])
+            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, val_loader.dataset.triplet_def[letter])
 
             val_dict = {
                 f'{mode}/{ascii_letter}/loss': sum(val_losses) / len(val_losses),

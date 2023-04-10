@@ -23,9 +23,14 @@ class BaseOptions:
         self._parser.add_argument('--image_size', type=int, default=64, help='Input image size')
         self._parser.add_argument('--batch_size', type=int, default=196, help='Input batch size')
         self._parser.add_argument('--optimizer', type=str, default='Adam')
+        self._parser.add_argument('--mode', type=str, default='Testing')
         self._parser.add_argument('--cuda', action='store_true', help="Whether to use GPU")
+        self._parser.add_argument('--with_likely', action='store_true', help="Whether to use Likely ground truth")
         self._parser.add_argument('--resume', action='store_true', help="Whether to use GPU")
+        self._parser.add_argument('--supervised', action='store_true',
+                                  help="Whether to train the network with supervised learning")
         self._parser.add_argument('--arch', type=str, default='resnet18')
+        self._parser.add_argument('--network', type=str, default='simsiam', choices=['simsiam', 'triplet'])
         self._parser.add_argument('--save_freq_iter', type=int, default=10,
                                   help='save the training losses to the summary writer every # iterations')
         self._parser.add_argument('--n_threads_train', default=8, type=int, help='# threads for loading data')
@@ -51,6 +56,7 @@ class BaseOptions:
         self._parser.add_argument('--weight_decay', type=float, default=0., help='weight decay')
         self._parser.add_argument('--nepochs', type=int, default=1000)
         self._parser.add_argument('--early_stop', type=int, default=10)
+        self._parser.add_argument('--n_samples_per_tm', type=int, default=8)
 
         self._initialized = True
 

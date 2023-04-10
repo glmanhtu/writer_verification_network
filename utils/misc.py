@@ -83,6 +83,7 @@ def compute_similarity_matrix(data: Dict[str, Tensor], n_times_testing=5):
 
 
 def random_query_results(similarity_matrix, gt_map, dataset, letter, n_queries=5, top_k=25):
+    positive_pairs, _ = gt_map
     papyrus_set_indexes = list(set(similarity_matrix.index))
     fragment_queries = random.sample(papyrus_set_indexes, n_queries)
     fragment_queries = fragment_queries
@@ -96,7 +97,7 @@ def random_query_results(similarity_matrix, gt_map, dataset, letter, n_queries=5
         similarity_result = similarity_matrix[query]
         for target, similarity in similarity_result.items():
             in_gt = False
-            if gt_map[query] == gt_map[target]:
+            if target in positive_pairs[query]:
                 in_gt = True
             query_result['results'].append({
                 'target': target,
@@ -113,13 +114,18 @@ def random_query_results(similarity_matrix, gt_map, dataset, letter, n_queries=5
     return result
 
 
-def get_metrics(similarity_matrix, get_group_id):
-    papyrus_ids = [get_group_id(x) for x in similarity_matrix.index]
-    papyrus_set_indexes = list(set(papyrus_ids))
-    papyrus_ids = [papyrus_set_indexes.index(x) for x in papyrus_ids]
+def get_metrics(similarity_matrix, triplet_def):
+    positive_pairs, _ = triplet_def
+    correct_retrievals = similarity_matrix.copy(deep=True) * 0
+    for row in similarity_matrix.index:
+        for col in similarity_matrix.columns:
+            if col in positive_pairs[row]:
+                correct_retrievals[col][row] = 1
+                correct_retrievals[row][col] = 1
+    correct_retrievals = correct_retrievals.to_numpy() > 0
     distance_matrix = 1 - similarity_matrix.to_numpy()
     precision_at, recall_at, sorted_retrievals = wi19_evaluate.get_precision_recall_matrices(
-        distance_matrix, np.array(papyrus_ids), remove_self_column=False)
+        distance_matrix, classes=None, remove_self_column=False, correct_retrievals=correct_retrievals)
 
     non_singleton_idx = sorted_retrievals.sum(axis=1) > 0
     mAP = wi19_evaluate.compute_map(precision_at[non_singleton_idx, :], sorted_retrievals[non_singleton_idx, :])

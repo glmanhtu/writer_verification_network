@@ -177,6 +177,7 @@ if __name__ == "__main__":
                entity=train_args.wb_entity,
                resume=train_args.resume,
                config=train_args,
+               settings=wandb.Settings(_disable_stats=True),
                mode=train_args.wb_mode)
 
     trainer = Trainer(train_args)

@@ -37,7 +37,7 @@ class Trainer:
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
                                 k_fold=k_fold, with_likely=True, supervised_training=True,
-                                triplet=is_triplet, n_samples_per_tm=999)
+                                triplet=is_triplet, n_samples_per_tm=args.n_samples_per_tm)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
                                           persistent_workers=True, pin_memory=True, batch_size=args.batch_size)
@@ -70,7 +70,7 @@ class Trainer:
                 continue
 
             current_m_ap, distance_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val,
-                                                                          n_time_validates=5)
+                                                                        n_time_validates=20)
 
             if current_m_ap > best_m_ap:
                 print("Average mAP improved, from {:.4f} to {:.4f}".format(best_m_ap, current_m_ap))

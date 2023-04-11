@@ -118,10 +118,7 @@ class TMDataset(Dataset):
         target_tm = tm
         if self.supervised_training:
             target_tm = random.choice(tuple(self.positive_def[letter][tm]))
-            positive_samples = random.choice(self.letters[letter][target_tm])
-        else:
-            pos_id = random.choice([x for x in range(len(self.letters[letter][target_tm])) if x != anchor_bucket_idx])
-            positive_samples = self.letters[letter][target_tm][pos_id]
+        positive_samples = [x for y in self.letters[letter][target_tm] for x in y if x != anchor]
 
         with Image.open(random.choice(positive_samples)) as img:
             positive_img = self.transforms(img)

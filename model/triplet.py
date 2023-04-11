@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 
-criterion = nn.TripletMarginLoss(margin=2)
+criterion = nn.TripletMarginLoss(margin=1)
 
 
 class TripletNetwork(nn.Module):
@@ -15,8 +15,7 @@ class TripletNetwork(nn.Module):
         super(TripletNetwork, self).__init__()
 
         # create the encoder
-        # num_classes is the output fc dimension, zero-initialize last BNs
-        self.encoder = base_encoder(zero_init_residual=True, pretrained=True)
+        self.encoder = base_encoder(pretrained=True)
 
         # layers_to_train = ["layer4", "layer3", "layer2", "layer1", "conv1"][:trainable_layers]
         # if trainable_layers == 5:

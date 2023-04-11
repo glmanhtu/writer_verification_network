@@ -16,7 +16,7 @@ class TripletNetwork(nn.Module):
 
         # create the encoder
         # num_classes is the output fc dimension, zero-initialize last BNs
-        self.encoder = base_encoder(num_classes=dim, zero_init_residual=True)
+        self.encoder = base_encoder(num_classes=dim, zero_init_residual=True, pretrained=True)
         # Modify the average pooling layer to use a smaller kernel size
         self.encoder.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 

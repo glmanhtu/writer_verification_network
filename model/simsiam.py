@@ -7,14 +7,22 @@
 import torch
 import torch.nn as nn
 
+from model.distance_model import DistanceModel
+import torch.nn.functional as F
 
 criterion = nn.CosineSimilarity(dim=1)
 
 
-class SimSiam(nn.Module):
+class SimSiam(DistanceModel):
     """
     Build a SimSiam model.
     """
+
+    def compute_distance(self, source_features, target_features):
+        similarity = F.cosine_similarity(source_features, target_features, dim=1)
+        similarity_percentage = (similarity + 1) / 2
+        return 1 - similarity_percentage
+
     def __init__(self, base_encoder, dim=2048, pred_dim=512):
         """
         dim: feature dimension (default: 2048)

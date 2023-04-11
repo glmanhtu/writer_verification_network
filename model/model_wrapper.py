@@ -5,11 +5,12 @@ import torch
 from torch import nn
 
 from criterions.optim import Optimizer, Scheduler
+from model.distance_model import DistanceModel
 from utils.misc import map_location
 
 
 class ModelWrapper:
-    def __init__(self, args, working_dir, model, is_train, device):
+    def __init__(self, args, working_dir, model: DistanceModel, is_train, device):
         self._model = model.to(device)
         self._args = args
         self._is_train = is_train
@@ -117,3 +118,6 @@ class ModelWrapper:
         self._optimizer.zero_grad()
         loss.backward()
         self._optimizer.step()
+
+    def compute_distance(self, source_features, target_features):
+        return self._model.compute_distance(source_features, target_features)

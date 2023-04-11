@@ -1,16 +1,16 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
 import torch
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 import torch.nn as nn
-
+import torch.nn.functional as F
+from model.distance_model import DistanceModel
 
 criterion = nn.TripletMarginLoss(margin=1)
 
 
-class TripletNetwork(nn.Module):
+class TripletNetwork(DistanceModel):
+
+    def compute_distance(self, source_features, target_features):
+        return F.mse_loss(source_features, target_features)
+
     def __init__(self, base_encoder, dim=512, trainable_layers=2):
         super(TripletNetwork, self).__init__()
 

@@ -58,7 +58,7 @@ def display_terminal_eval(iter_start_time, i_epoch, eval_dict):
     print(output + "\n")
 
 
-def compute_distance_matrix(data: Dict[str, Tensor], n_times_testing=5):
+def compute_distance_matrix(data: Dict[str, Tensor], distance_fn, n_times_testing=5):
     distance_map = {}
     fragments = list(data.keys())
     for i in range(len(fragments)):
@@ -71,7 +71,7 @@ def compute_distance_matrix(data: Dict[str, Tensor], n_times_testing=5):
 
             # source_features = F.normalize(source_features, p=2, dim=1)
             # target_features = F.normalize(target_features, p=2, dim=1)
-            distance = F.mse_loss(source_features, target_features)
+            distance = distance_fn(source_features, target_features)
 
             mean_distance = distance.cpu().item()
             distance_map.setdefault(source, {})[target] = mean_distance

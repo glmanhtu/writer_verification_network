@@ -76,4 +76,4 @@ class SimSiam(DistanceModel):
         z2 = z2.detach()
 
         loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
-        return loss, (p1, p2)
+        return loss, (z1, z2)

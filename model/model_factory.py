@@ -25,6 +25,7 @@ class ModelsFactory:
                         state_dict[k[len("module."):]] = state_dict[k]
                     del state_dict[k]
                 model.load_state_dict(pretrained_model['state_dict'])
+                print(f'Checkpoint {args.ss_pretrained} is loaded')
         else:
             model = triplet.TripletNetwork(models.__dict__[args.arch])
         return ModelWrapper(args, working_dir, model, is_train, device)

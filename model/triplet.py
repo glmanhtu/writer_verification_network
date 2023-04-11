@@ -11,12 +11,20 @@ criterion = nn.TripletMarginLoss(margin=0.5)
 
 
 class TripletNetwork(nn.Module):
-    def __init__(self, base_encoder, dim=512):
+    def __init__(self, base_encoder, dim=512, trainable_layers=3):
         super(TripletNetwork, self).__init__()
 
         # create the encoder
         # num_classes is the output fc dimension, zero-initialize last BNs
         self.encoder = base_encoder(zero_init_residual=True, pretrained=True)
+
+        layers_to_train = ["layer4", "layer3", "layer2", "layer1", "conv1"][:trainable_layers]
+        if trainable_layers == 5:
+            layers_to_train.append("bn1")
+        for name, parameter in self.encoder.named_parameters():
+            if all([not name.startswith(layer) for layer in layers_to_train]):
+                parameter.requires_grad_(False)
+
         prev_dim = self.encoder.fc.weight.shape[1]
         self.encoder.fc = nn.Sequential(nn.Linear(prev_dim, prev_dim, bias=False),
                                         nn.BatchNorm1d(prev_dim),

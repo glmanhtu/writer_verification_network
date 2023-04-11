@@ -36,7 +36,7 @@ class Trainer:
                                             pin_memory=True)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
-                                k_fold=k_fold, with_likely=True, supervised_training=True,
+                                k_fold=k_fold, with_likely=args.with_likely, supervised_training=True,
                                 triplet=is_triplet, n_samples_per_tm=999)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,

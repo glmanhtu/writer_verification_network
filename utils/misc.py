@@ -69,8 +69,8 @@ def compute_similarity_matrix(data: Dict[str, Tensor], n_times_testing=5):
             source_features = data[source][torch.randint(len(data[source]), (n_times_testing * n_items,))]
             target_features = data[target][torch.randint(len(data[target]), (n_times_testing * n_items,))]
 
-            source_features = F.normalize(source_features, p=2, dim=1)
-            target_features = F.normalize(target_features, p=2, dim=1)
+            # source_features = F.normalize(source_features, p=2, dim=1)
+            # target_features = F.normalize(target_features, p=2, dim=1)
             similarity = F.cosine_similarity(source_features, target_features, dim=1)
             similarity_percentage = (similarity + 1) / 2   # As output of cosine_similarity ranging between [-1, 1]
 

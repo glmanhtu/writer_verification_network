@@ -11,7 +11,7 @@ from model.model_factory import ModelsFactory
 from options.train_options import TrainOptions
 from utils import wb_utils
 from utils.data_utils import load_triplet_file, letter_ascii
-from utils.misc import EarlyStop, display_terminal, compute_similarity_matrix, get_metrics, display_terminal_eval, \
+from utils.misc import EarlyStop, display_terminal, compute_distance_matrix, get_metrics, display_terminal_eval, \
     random_query_results
 from utils.transform import get_transforms, val_transforms
 from utils.wb_utils import create_heatmap
@@ -36,7 +36,7 @@ class Trainer:
                                             pin_memory=True)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
-                                k_fold=k_fold, with_likely=args.with_likely, supervised_training=True,
+                                k_fold=k_fold, with_likely=True, supervised_training=True,
                                 triplet=is_triplet, n_samples_per_tm=999)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
@@ -69,7 +69,7 @@ class Trainer:
             if not i_epoch % self.args.n_epochs_per_eval == 0:
                 continue
 
-            current_m_ap, similarity_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val,
+            current_m_ap, distance_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val,
                                                                           n_time_validates=5)
 
             if current_m_ap > best_m_ap:
@@ -77,15 +77,15 @@ class Trainer:
                 best_m_ap = current_m_ap
                 wandb.run.summary[f'best_model/avg_mAP'] = current_m_ap
                 self._model.save()  # save best model
-                for letter in similarity_matrices:
-                    similar_df = similarity_matrices[letter]
+                for letter in distance_matrices:
+                    distance_df = distance_matrices[letter]
                     ascii_letter = letter_ascii[letter]
-                    similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{ascii_letter}.csv'),
+                    distance_df.to_csv(os.path.join(self._working_dir, f'distance_matrix_{ascii_letter}.csv'),
                                       encoding='utf-8')
                     for key in val_dicts[letter]:
                         wandb.run.summary[f'best_model/{key}'] = val_dicts[letter][key]
 
-                    query_results = random_query_results(similar_df, self.data_loader_val.dataset.triplet_def[letter],
+                    query_results = random_query_results(distance_df, self.data_loader_val.dataset.triplet_def[letter],
                                                          self.data_loader_val.dataset, letter, n_queries=5, top_k=10)
                     wandb.log({f'val/best_model/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=10)},
                               step=self._current_step)
@@ -141,17 +141,17 @@ class Trainer:
             print(f'Finished the evaluating {i + 1}/{n_time_validates}')
 
         all_m_ap = []
-        similarity_matrices = {}
+        distance_matrices = {}
         val_dicts = {}
         for letter in list(letter_features.keys()):
             ascii_letter = letter_ascii[letter]
             letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter].items()}
-            similar_df = compute_similarity_matrix(letter_features[letter])
+            distance_df = compute_distance_matrix(letter_features[letter])
             del letter_features[letter]
 
-            wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
+            wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(distance_df))},
                       step=self._current_step)
-            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(similar_df, val_loader.dataset.triplet_def[letter])
+            m_ap, top1, pr_a_k10, pr_a_k100 = get_metrics(distance_df, val_loader.dataset.triplet_def[letter])
 
             val_dict = {
                 f'{mode}/{ascii_letter}/loss': sum(val_losses) / len(val_losses),
@@ -163,10 +163,10 @@ class Trainer:
             wandb.log(val_dict, step=self._current_step)
             display_terminal_eval(val_start_time, i_epoch, val_dict)
             all_m_ap.append(m_ap)
-            similarity_matrices[letter] = similar_df
+            distance_matrices[letter] = distance_df
             val_dicts[letter] = val_dict
 
-        return sum(all_m_ap) / len(all_m_ap), similarity_matrices, val_dicts
+        return sum(all_m_ap) / len(all_m_ap), distance_matrices, val_dicts
 
 
 if __name__ == "__main__":

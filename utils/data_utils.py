@@ -105,10 +105,7 @@ def load_triplet_file(filter_file, all_tms, with_likely=False):
         current_tm, second_tm = item['category'], item['secondary_category']
         if current_tm in all_tms and second_tm in all_tms:
             relationship = mapping[current_tm][second_tm]
-            if relationship == 4:
-                negative_pairs.setdefault(current_tm, set([])).add(second_tm)
-                negative_pairs.setdefault(second_tm, set([])).add(current_tm)
-            if with_likely and relationship == 3:
+            if relationship == 4 or relationship == 3:
                 negative_pairs.setdefault(current_tm, set([])).add(second_tm)
                 negative_pairs.setdefault(second_tm, set([])).add(current_tm)
             if relationship == 1:

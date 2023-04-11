@@ -20,7 +20,7 @@ def generate_query_table(query_result, top_k=25):
 
     record = ['Query img']
     for query in query_result:
-        img = add_description(query['query_img'], 'Similarity: - ', query['query'])
+        img = add_description(query['query_img'], 'Distance: - ', query['query'])
         record.append(wandb.Image(img))
     data.append(record)
 
@@ -28,7 +28,7 @@ def generate_query_table(query_result, top_k=25):
         record = [f'#{idx + 1}']
         for query in query_result:
             target = query['results'][idx]
-            bottom_desc = 'Similarity {:.4f}'.format(target['similarity'])
+            bottom_desc = 'Distance {:.4f}'.format(target['distance'])
             img = add_description(target['target_img'], bottom_desc, target['target'], target['in_gt'])
             record.append(wandb.Image(img))
         data.append(record)

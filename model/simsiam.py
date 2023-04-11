@@ -20,9 +20,8 @@ class SimSiam(DistanceModel):
 
     def compute_distance(self, source_features, target_features):
         similarity = F.cosine_similarity(source_features, target_features, dim=1)
-        similarity_percentage = (similarity + 1) / 2
-        distance = 1 - similarity_percentage
-        return distance.mean()
+        similarity_percentage = (similarity.mean() + 1) / 2
+        return 1 - similarity_percentage
 
     def __init__(self, base_encoder, dim=2048, pred_dim=512):
         """
@@ -55,19 +54,13 @@ class SimSiam(DistanceModel):
                                         nn.ReLU(inplace=True), # hidden layer
                                         nn.Linear(pred_dim, dim)) # output layer
 
-    def forward(self, x1, x2):
-        """
-        Input:
-            x1: first views of images
-            x2: second views of images
-        Output:
-            p1, p2, z1, z2: predictors and targets of the network
-            See Sec. 3 of https://arxiv.org/abs/2011.10566 for detailed notations
-        """
+    def forward(self, batch_data, device):
+        positive_images = batch_data['positive'].to(device, non_blocking=True)
+        anchor_images = batch_data['anchor'].to(device, non_blocking=True)
 
         # compute features for one view
-        z1 = self.encoder(x1) # NxC
-        z2 = self.encoder(x2) # NxC
+        z1 = self.encoder(positive_images) # NxC
+        z2 = self.encoder(anchor_images) # NxC
 
         p1 = self.predictor(z1) # NxC
         p2 = self.predictor(z2) # NxC
@@ -76,4 +69,4 @@ class SimSiam(DistanceModel):
         z2 = z2.detach()
 
         loss = -(criterion(p1, z2).mean() + criterion(p2, z1).mean()) * 0.5
-        return loss, (z1, z2)
+        return loss, (p1, p2)

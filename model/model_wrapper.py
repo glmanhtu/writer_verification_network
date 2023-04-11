@@ -105,14 +105,8 @@ class ModelWrapper:
         self._is_train = False
 
     def __call__(self, batch_data):
-        positive_images = batch_data['positive'].to(self._device, non_blocking=True)
-        anchor_images = batch_data['anchor'].to(self._device, non_blocking=True)
-
         with torch.set_grad_enabled(self._is_train):
-            if self._args.network == 'simsiam':
-                return self._model(x1=positive_images, x2=anchor_images)
-            else:
-                return self._model(batch_data, self._device)
+            return self._model(batch_data, self._device)
 
     def optimise_params(self, loss):
         self._optimizer.zero_grad()

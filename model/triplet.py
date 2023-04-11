@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 
-criterion = nn.TripletMarginLoss(margin=0.5)
+criterion = nn.TripletMarginLoss(margin=1)
 
 
 class TripletNetwork(nn.Module):

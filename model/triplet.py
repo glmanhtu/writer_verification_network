@@ -3,15 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from model.distance_model import DistanceModel
 
-criterion = nn.TripletMarginLoss(margin=1)
-
 
 class TripletNetwork(DistanceModel):
 
     def compute_distance(self, source_features, target_features):
         return F.mse_loss(source_features, target_features)
 
-    def __init__(self, base_encoder, dim=512, trainable_layers=2):
+    def __init__(self, base_encoder, dim=512, triplet_margin=1.):
         super(TripletNetwork, self).__init__()
 
         # create the encoder
@@ -32,6 +30,8 @@ class TripletNetwork(DistanceModel):
         # Modify the average pooling layer to use a smaller kernel size
         self.encoder.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
+        self.criterion = nn.TripletMarginLoss(margin=triplet_margin)
+
     def forward(self, batch_data, device):
         positive = batch_data['positive'].to(device, non_blocking=True)
         anchor = batch_data['anchor'].to(device, non_blocking=True)
@@ -45,5 +45,5 @@ class TripletNetwork(DistanceModel):
         negative = batch_data['negative'].to(device, non_blocking=True)
         neg = self.encoder(negative)
 
-        loss = criterion(anc, pos, neg)
+        loss = self.criterion(anc, pos, neg)
         return loss, (pos, anc)

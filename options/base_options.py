@@ -57,6 +57,7 @@ class BaseOptions:
         self._parser.add_argument('--weight_decay', type=float, default=0., help='weight decay')
         self._parser.add_argument('--nepochs', type=int, default=1000)
         self._parser.add_argument('--early_stop', type=int, default=10)
+        self._parser.add_argument('--triplet_margin', type=float, default=1.)
         self._parser.add_argument('--n_samples_per_tm', type=int, default=8)
 
         self._initialized = True

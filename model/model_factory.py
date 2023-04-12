@@ -27,5 +27,5 @@ class ModelsFactory:
                 model.load_state_dict(pretrained_model['state_dict'])
                 print(f'Checkpoint {args.ss_pretrained} is loaded')
         else:
-            model = triplet.TripletNetwork(models.__dict__[args.arch])
+            model = triplet.TripletNetwork(models.__dict__[args.arch], triplet_margin=args.triplet_margin)
         return ModelWrapper(args, working_dir, model, is_train, device)

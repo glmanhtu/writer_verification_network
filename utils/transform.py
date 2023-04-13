@@ -18,8 +18,7 @@ def get_transforms(img_size):
         ], p=0.5),
         MovingResize((img_size, img_size), random_move=True),
         RandomResize(img_size),
-        RandomCutOut(mask_size=img_size // 3.5, mask_color=(255, 255, 255)),
-
+        RandomCutOut(mask_size=int(img_size // 3.5), mask_color=(255, 255, 255)),
         # torchvision.transforms.RandomApply([
         #     torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
         # ], p=0.5),
@@ -97,48 +96,46 @@ class RandomResize:
         return result
 
 
-def cutout(mask_size, p, cutout_inside, mask_color=(0, 0, 0)):
+def cutout(image, mask_size, p, cutout_inside, mask_color=(0, 0, 0)):
     mask_size_half = mask_size // 2
     offset = 1 if mask_size % 2 == 0 else 0
+    image = np.asarray(image).copy()
 
-    def _cutout(image):
-        image = np.asarray(image).copy()
-
-        if np.random.random() > p:
-            return image
-
-        h, w = image.shape[:2]
-
-        if cutout_inside:
-            cxmin, cxmax = mask_size_half, w + offset - mask_size_half
-            cymin, cymax = mask_size_half, h + offset - mask_size_half
-        else:
-            cxmin, cxmax = 0, w + offset
-            cymin, cymax = 0, h + offset
-
-        cx = np.random.randint(cxmin, cxmax)
-        cy = np.random.randint(cymin, cymax)
-        xmin = cx - mask_size_half
-        ymin = cy - mask_size_half
-        xmax = xmin + mask_size
-        ymax = ymin + mask_size
-        xmin = max(0, xmin)
-        ymin = max(0, ymin)
-        xmax = min(w, xmax)
-        ymax = min(h, ymax)
-        image[ymin:ymax, xmin:xmax] = mask_color
+    if np.random.random() > p:
         return image
 
-    return _cutout
+    h, w = image.shape[:2]
+
+    if cutout_inside:
+        cxmin, cxmax = mask_size_half, w + offset - mask_size_half
+        cymin, cymax = mask_size_half, h + offset - mask_size_half
+    else:
+        cxmin, cxmax = 0, w + offset
+        cymin, cymax = 0, h + offset
+
+    cx = np.random.randint(cxmin, cxmax)
+    cy = np.random.randint(cymin, cymax)
+    xmin = cx - mask_size_half
+    ymin = cy - mask_size_half
+    xmax = xmin + mask_size
+    ymax = ymin + mask_size
+    xmin = max(0, xmin)
+    ymin = max(0, ymin)
+    xmax = min(w, xmax)
+    ymax = min(h, ymax)
+    image[ymin:ymax, xmin:xmax] = mask_color
+    return image
 
 
 class RandomCutOut:
 
     def __init__(self, mask_size, p=0.5, mask_color=(0, 0, 0)):
-        self.cut_fn = cutout(mask_size, p, True, mask_color)
+        self.mask_size = mask_size
+        self.p = p
+        self.mask_color = mask_color
 
     def __call__(self, image):
-        out_img = self.cut_fn(image)
+        out_img = cutout(image, self.mask_size, self.p, True, self.mask_color)
         return Image.fromarray(out_img)
 
 

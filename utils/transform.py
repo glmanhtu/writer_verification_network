@@ -6,7 +6,7 @@ import torch
 import torchvision.transforms
 import torchvision.transforms
 from PIL import ImageOps, Image
-from torchvision.transforms import transforms
+from torchvision.transforms import transforms, InterpolationMode
 
 from utils.data_utils import resize_image, padding_image
 
@@ -17,8 +17,11 @@ def get_transforms(img_size):
             torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.2),
         ], p=0.5),
         MovingResize((img_size, img_size), random_move=True),
+        torchvision.transforms.RandomApply([
+            torchvision.transforms.RandomRotation(degrees=15, fill=255, interpolation=InterpolationMode.BICUBIC),
+        ], p=0.6),
         RandomResize(img_size),
-        RandomCutOut(mask_size=int(img_size // 3.5), mask_color=(255, 255, 255)),
+        # RandomCutOut(mask_size=int(img_size // 3.5), mask_color=(255, 255, 255), p=0.5),
         # torchvision.transforms.RandomApply([
         #     torchvision.transforms.GaussianBlur(3, sigma=(1, 2)),
         # ], p=0.5),

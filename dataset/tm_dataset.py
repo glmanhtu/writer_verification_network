@@ -84,12 +84,14 @@ class TMDataset(Dataset):
             self.positive_def[letter], self.negative_def[letter] = triplet_def[letter]
 
         self.data = []
-        for letter in letters:
+        self.letter_ids = []
+        for let_id, letter in enumerate(letters):
             for tm in letters[letter]:
                 if triplet and is_train and len(self.negative_def[letter][tm]) == 0:
                     continue
                 for idx, anchor_bucket in enumerate(letters[letter][tm]):
                     self.data.append((letter, tm, idx))
+                    self.letter_ids.append(let_id)
         self.transforms = transforms
         self.supervised_training = supervised_training
         self.triplet_training_mode = triplet

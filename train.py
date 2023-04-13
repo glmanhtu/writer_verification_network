@@ -2,8 +2,9 @@ import os.path
 import os.path
 import time
 
+import numpy as np
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 
 import wandb
 from dataset.tm_dataset import TMDataset
@@ -31,9 +32,17 @@ class Trainer:
         dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters, is_train=True, fold=fold,
                                   k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised,
                                   triplet=is_triplet, n_samples_per_tm=args.n_samples_per_tm)
-        self.data_loader_train = DataLoader(dataset_train, shuffle=True, num_workers=args.n_threads_train,
+
+        letter_unique, counts = np.unique(dataset_train.letter_ids, return_counts=True)
+        print('Unique letters: {}'.format(letter_unique))
+
+        letter_weights = [sum(counts) / c for c in counts]
+        sample_weights = [letter_weights[i] for i in dataset_train.letter_ids]
+        sampler = WeightedRandomSampler(sample_weights, len(dataset_train.letter_ids))
+
+        self.data_loader_train = DataLoader(dataset_train, num_workers=args.n_threads_train,
                                             batch_size=args.batch_size, drop_last=True, persistent_workers=True,
-                                            pin_memory=True)
+                                            pin_memory=True, sampler=sampler)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
                                 k_fold=k_fold, with_likely=True, supervised_training=True,

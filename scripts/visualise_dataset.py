@@ -3,11 +3,12 @@ import logging
 import cv2
 import numpy as np
 import torchvision.transforms
+from torchvision.transforms import InterpolationMode
 
 from dataset.tm_dataset import TMDataset
 from options.train_options import TrainOptions
 from utils.data_utils import padding_image
-from utils.transform import MovingResize, RandomCutOut
+from utils.transform import MovingResize, RandomCutOut, RandomResize
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
@@ -15,7 +16,9 @@ args = TrainOptions(save_conf=False).parse()
 img_size = 112
 transforms = torchvision.transforms.Compose([
     MovingResize((img_size, img_size), random_move=False),
-    RandomCutOut(mask_size=32, mask_color=(255, 255, 255)),
+    torchvision.transforms.RandomRotation(degrees=15, fill=255, interpolation=InterpolationMode.BICUBIC),
+    RandomResize(img_size),
+    # RandomCutOut(mask_size=32, mask_color=(255, 255, 255)),
     lambda x: np.array(x)])
 
 train_dataset = TMDataset(args.tm_dataset_path, transforms, args.letters, is_train=True, with_likely=False, supervised_training=False)

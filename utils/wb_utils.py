@@ -14,7 +14,7 @@ def wb_img(image):
     return wandb.Image(reverse_transform()(image))
 
 
-def generate_query_table(query_result, top_k=25):
+def generate_query_table(query_result):
     columns = ["Desc"] + [f'query #{i + 1}' for i in range(len(query_result))]
     data = []
 
@@ -24,7 +24,7 @@ def generate_query_table(query_result, top_k=25):
         record.append(wandb.Image(img))
     data.append(record)
 
-    for idx in range(top_k):
+    for idx in range(len(query_result[0]['results'])):
         record = [f'#{idx + 1}']
         for query in query_result:
             target = query['results'][idx]

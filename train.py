@@ -115,7 +115,7 @@ class Trainer:
             ascii_letter = letter_ascii[letter]
             query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
                                                  self.data_loader_val.dataset, letter, n_queries=5, top_k=99)
-            wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=99)},
+            wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results)},
                       step=self._current_step)
 
     def _train_epoch(self, i_epoch):

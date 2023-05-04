@@ -99,11 +99,6 @@ class Trainer:
                     similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{ascii_letter}.csv'),
                                       encoding='utf-8')
 
-                    query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
-                                                         self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
-                    wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
-                              step=self._current_step)
-
             # print epoch info
             time_epoch = time.time() - epoch_start_time
             print('End of epoch %d / %d \t Time Taken: %d sec (%d min or %d h)' %
@@ -112,6 +107,16 @@ class Trainer:
             if self.early_stop.should_stop(1 - current_m_ap):
                 print(f'Early stop at epoch {i_epoch}')
                 break
+
+    def final_eval(self):
+        current_m_ap, similarity_matrices = self._validate(args.nepochs + 1, self.data_loader_val)
+        for letter in similarity_matrices:
+            similar_df = similarity_matrices[letter]
+            ascii_letter = letter_ascii[letter]
+            query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
+                                                 self.data_loader_val.dataset, letter, n_queries=5, top_k=15)
+            wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results, top_k=15)},
+                      step=self._current_step)
 
     def _train_epoch(self, i_epoch):
         self._model.set_train()
@@ -189,3 +194,4 @@ if __name__ == "__main__":
         trainer.train()
 
     trainer.load_pretrained_model()
+    trainer.final_eval()

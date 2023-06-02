@@ -11,7 +11,7 @@ from model.model_factory import ModelsFactory
 from options.train_options import TrainOptions
 from utils import wb_utils
 from utils.data_utils import load_triplet_file, letter_ascii
-from utils.misc import EarlyStop, display_terminal, compute_distance_matrix, get_metrics, display_terminal_eval, \
+from utils.misc import EarlyStop, display_terminal, get_metrics, display_terminal_eval, \
     random_query_results
 from utils.transform import get_transforms, val_transforms
 from utils.wb_utils import create_heatmap

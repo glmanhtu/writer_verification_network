@@ -25,4 +25,5 @@ if __name__ == "__main__":
             trainer.train()
 
         trainer.load_pretrained_model()
+        trainer.final_eval()
         run.finish()

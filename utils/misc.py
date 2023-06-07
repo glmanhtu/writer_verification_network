@@ -71,7 +71,7 @@ def compute_distance_matrix(data: Dict[str, Tensor], distance_fn, n_times_testin
 
             # Remove self comparing cases
             same_flag = torch.isclose(source_features, target_features)
-            not_same_flag = torch.logical_not(same_flag)
+            not_same_flag = torch.logical_not(torch.all(same_flag, dim=1))
 
             # source_features = F.normalize(source_features, p=2, dim=1)
             # target_features = F.normalize(target_features, p=2, dim=1)

@@ -113,6 +113,8 @@ class Trainer:
         for letter in similarity_matrices:
             similar_df = similarity_matrices[letter]
             ascii_letter = letter_ascii[letter]
+            similar_df.to_csv(os.path.join(self._working_dir, f'similarity_matrix_{ascii_letter}.csv'),
+                              encoding='utf-8')
             query_results = random_query_results(similar_df, self._letter_positive_groups[letter],
                                                  self.data_loader_val.dataset, letter, n_queries=5, top_k=99)
             wandb.log({f'val/best_prediction/{ascii_letter}': wb_utils.generate_query_table(query_results)},

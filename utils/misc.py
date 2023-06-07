@@ -69,9 +69,13 @@ def compute_distance_matrix(data: Dict[str, Tensor], distance_fn, n_times_testin
             source_features = data[source][torch.randint(len(data[source]), (n_times_testing * n_items,))]
             target_features = data[target][torch.randint(len(data[target]), (n_times_testing * n_items,))]
 
+            # Remove self comparing cases
+            same_flag = source_features == target_features
+            not_same_flag = torch.logical_not(same_flag)
+
             # source_features = F.normalize(source_features, p=2, dim=1)
             # target_features = F.normalize(target_features, p=2, dim=1)
-            distance = distance_fn(source_features, target_features)
+            distance = distance_fn(source_features[not_same_flag], target_features[not_same_flag])
 
             mean_distance = distance.cpu().item()
             distance_map.setdefault(source, {})[target] = mean_distance

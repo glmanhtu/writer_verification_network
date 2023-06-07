@@ -67,8 +67,11 @@ class TMDataset(Dataset):
 
         for letter in letters:
             for tm in letters[letter]:
-                letters[letter][tm] = list(chunks(letters[letter][tm], n_samples_per_tm))
-                letters[letter][tm] = [x for x in letters[letter][tm] if len(x) > 0]
+                if is_train:
+                    letters[letter][tm] = list(chunks(letters[letter][tm], n_samples_per_tm))
+                    letters[letter][tm] = [x for x in letters[letter][tm] if len(x) > 0]
+                else:
+                    letters[letter][tm] = [[x] for x in letters[letter][tm]]
 
         self.letters = letters
 

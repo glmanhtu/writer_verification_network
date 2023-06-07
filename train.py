@@ -68,7 +68,7 @@ class Trainer:
                 continue
 
             current_m_ap, distance_matrices, val_dicts = self._validate(i_epoch, self.data_loader_val,
-                                                                        n_time_validates=20)
+                                                                        n_time_validates=1)
 
             if current_m_ap > best_m_ap:
                 print("Average mAP improved, from {:.4f} to {:.4f}".format(best_m_ap, current_m_ap))

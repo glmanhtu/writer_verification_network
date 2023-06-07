@@ -98,6 +98,9 @@ class Trainer:
                 print(f'Early stop at epoch {i_epoch}')
                 break
 
+    def final_eval(self):
+        self._validate(0, self.data_loader_val, n_time_validates=1)
+
     def _train_epoch(self, i_epoch):
         self._model.set_train()
         losses = []
@@ -188,3 +191,4 @@ if __name__ == "__main__":
         trainer.train()
 
     trainer.load_pretrained_model()
+    trainer.final_eval()

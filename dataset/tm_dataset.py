@@ -19,7 +19,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 class TMDataset(Dataset):
 
     def __init__(self, dataset_path: str, transforms, train_letters, is_train=False, fold=1, k_fold=3,
-                 with_likely=False, supervised_training=False, triplet=False, n_samples_per_tm=8):
+                 supervised_training=False, triplet=False, n_samples_per_tm=8):
         self.dataset_path = dataset_path
         self.is_train = is_train
         assert os.path.isdir(self.dataset_path)
@@ -74,9 +74,9 @@ class TMDataset(Dataset):
 
         root_dir = os.path.dirname(dir_path)
         triplet_def = {
-            'α': load_triplet_file(os.path.join(root_dir, 'BT120220128.triplet'), letters['α'].keys(), with_likely),
-            'ε': load_triplet_file(os.path.join(root_dir, 'Eps20220408.triplet'), letters['ε'].keys(), with_likely),
-            'μ': load_triplet_file(os.path.join(root_dir, 'mtest.triplet'), letters['μ'].keys(), with_likely),
+            'α': load_triplet_file(os.path.join(root_dir, 'BT120220128.triplet'), letters['α'].keys()),
+            'ε': load_triplet_file(os.path.join(root_dir, 'Eps20220408.triplet'), letters['ε'].keys()),
+            'μ': load_triplet_file(os.path.join(root_dir, 'mtest.triplet'), letters['μ'].keys()),
         }
         self.triplet_def = triplet_def
         self.positive_def, self.negative_def = {}, {}

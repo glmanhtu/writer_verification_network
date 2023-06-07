@@ -1,4 +1,5 @@
 import json
+import os.path
 
 import numpy as np
 from PIL import Image
@@ -88,31 +89,32 @@ def get_all_tms(triplet_file):
 
 def load_triplet_file(filter_file, all_tms, with_likely=False):
     all_tms = set(all_tms)
-    with open(filter_file) as f:
-        triplet_filter = json.load(f)
     positive_groups, negative_pairs = [], {}
     positive_pairs = {}
     mapping = {}
-    for item in triplet_filter['relations']:
-        current_tm = item['category']
-        mapping[current_tm] = {}
-        for second_item in item['relations']:
-            second_tm = second_item['category']
-            relationship = second_item['relationship']
-            mapping[current_tm][second_tm] = relationship
+    if os.path.isfile(filter_file):
+        with open(filter_file) as f:
+            triplet_filter = json.load(f)
+        for item in triplet_filter['relations']:
+            current_tm = item['category']
+            mapping[current_tm] = {}
+            for second_item in item['relations']:
+                second_tm = second_item['category']
+                relationship = second_item['relationship']
+                mapping[current_tm][second_tm] = relationship
 
-    for item in triplet_filter['histories']:
-        current_tm, second_tm = item['category'], item['secondary_category']
-        if current_tm in all_tms and second_tm in all_tms:
-            relationship = mapping[current_tm][second_tm]
-            if relationship == 4 or relationship == 3:
-                negative_pairs.setdefault(current_tm, set([])).add(second_tm)
-                negative_pairs.setdefault(second_tm, set([])).add(current_tm)
-            if relationship == 1:
-                add_items_to_group([current_tm, second_tm], positive_groups)
-            if with_likely and relationship == 2:
-                positive_pairs.setdefault(current_tm, set([])).add(second_tm)
-                positive_pairs.setdefault(second_tm, set([])).add(current_tm)
+        for item in triplet_filter['histories']:
+            current_tm, second_tm = item['category'], item['secondary_category']
+            if current_tm in all_tms and second_tm in all_tms:
+                relationship = mapping[current_tm][second_tm]
+                if relationship == 4 or relationship == 3:
+                    negative_pairs.setdefault(current_tm, set([])).add(second_tm)
+                    negative_pairs.setdefault(second_tm, set([])).add(current_tm)
+                if relationship == 1:
+                    add_items_to_group([current_tm, second_tm], positive_groups)
+                if with_likely and relationship == 2:
+                    positive_pairs.setdefault(current_tm, set([])).add(second_tm)
+                    positive_pairs.setdefault(second_tm, set([])).add(current_tm)
 
     for group in positive_groups:
         for tm in group:

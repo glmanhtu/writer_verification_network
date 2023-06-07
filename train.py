@@ -29,15 +29,13 @@ class Trainer:
         transforms = get_transforms(args.image_size)
         is_triplet = args.network == 'triplet'
         dataset_train = TMDataset(args.tm_dataset_path, transforms, args.letters, is_train=True, fold=fold,
-                                  k_fold=k_fold, with_likely=args.with_likely, supervised_training=args.supervised,
-                                  triplet=is_triplet, n_samples_per_tm=args.n_samples_per_tm)
+                                  k_fold=k_fold, triplet=is_triplet, n_samples_per_tm=args.n_samples_per_tm)
         self.data_loader_train = DataLoader(dataset_train, shuffle=True, num_workers=args.n_threads_train,
                                             batch_size=args.batch_size, drop_last=True, persistent_workers=True,
                                             pin_memory=True)
         transforms = val_transforms(args.image_size)
         dataset_val = TMDataset(args.tm_dataset_path, transforms, ['α', 'ε', 'μ'], is_train=False, fold=fold,
-                                k_fold=k_fold, with_likely=True, supervised_training=True,
-                                triplet=is_triplet, n_samples_per_tm=args.n_samples_per_tm)
+                                k_fold=k_fold, triplet=is_triplet, n_samples_per_tm=args.n_samples_per_tm)
 
         self.data_loader_val = DataLoader(dataset_val, shuffle=False, num_workers=args.n_threads_test,
                                           persistent_workers=True, pin_memory=True, batch_size=args.batch_size)

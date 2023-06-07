@@ -26,10 +26,7 @@ class BaseOptions:
         self._parser.add_argument('--ss_pretrained', type=str, default='')
         self._parser.add_argument('--mode', type=str, default='Testing')
         self._parser.add_argument('--cuda', action='store_true', help="Whether to use GPU")
-        self._parser.add_argument('--with_likely', action='store_true', help="Whether to use Likely ground truth")
         self._parser.add_argument('--resume', action='store_true', help="Whether to use GPU")
-        self._parser.add_argument('--supervised', action='store_true',
-                                  help="Whether to train the network with supervised learning")
         self._parser.add_argument('--arch', type=str, default='resnet18')
         self._parser.add_argument('--network', type=str, default='simsiam', choices=['simsiam', 'triplet'])
         self._parser.add_argument('--save_freq_iter', type=int, default=10,
@@ -47,16 +44,14 @@ class BaseOptions:
         self._parser.add_argument('--lr', type=float, default=1e-4,
                                   help="The initial learning rate")
         self._parser.add_argument('--dropout', type=float, default=0.5, help="Default dropout")
-        self._parser.add_argument('--patch_bg_threshold', type=float, default=0.6,
-                                  help="Maximum background percentage allowed")
         self._parser.add_argument('--lr_policy', type=str, default='none', choices=['step', 'none'])
         self._parser.add_argument('--lr_decay_epochs', type=int, default=100,
                                   help='reduce the lr to 0.1*lr for every # epochs')
         self._parser.add_argument('--n_epochs_per_eval', type=int, default=10,
                                   help='Run eval every n training epochs')
         self._parser.add_argument('--weight_decay', type=float, default=0., help='weight decay')
-        self._parser.add_argument('--nepochs', type=int, default=1000)
-        self._parser.add_argument('--early_stop', type=int, default=10)
+        self._parser.add_argument('--nepochs', type=int, default=800)
+        self._parser.add_argument('--early_stop', type=int, default=50)
         self._parser.add_argument('--triplet_margin', type=float, default=1.)
         self._parser.add_argument('--n_samples_per_tm', type=int, default=8)
 

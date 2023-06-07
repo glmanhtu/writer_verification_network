@@ -19,9 +19,7 @@ class SimSiam(DistanceModel):
     """
 
     def compute_distance(self, source_features, target_features):
-        similarity = F.cosine_similarity(source_features, target_features, dim=1)
-        similarity_percentage = (similarity.mean() + 1) / 2
-        return 1 - similarity_percentage
+        return F.mse_loss(source_features, target_features)
 
     def __init__(self, base_encoder, dim=2048, pred_dim=512):
         """

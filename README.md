@@ -2,10 +2,6 @@
 
 This is a PyTorch implementation of the network described in the paper "Stylistic Similarities in Greek Papyri based on Letter Shapes: A Deep Learning approach"
 
-## Paper correction
-There is a small mistake in formula 1 - page 7 of the paper. The minus sign shouldn't be there!
-![plot](./correction.png)
-
 
 ## Compatibility
 The dependencies can be installed by running the following command:

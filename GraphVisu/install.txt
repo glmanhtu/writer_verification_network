@@ -1,0 +1,24 @@
+To be able to run the visualisation of similarity matrix, python3 is
+mandatory.
+NB: This installing notes concern a linux system, adapt the instructions if
+you run python through another one.
+
+The whole list of package dependencies is the following
+one:
+
+1) eventually update the system installation apt-get update
+2) sudo apt-get install python3-pip
+3) sudo apt-get install numpy
+4) sudo pip3 install numpy
+5) sudo pip3 install matplotlib
+6) sudo pip3 install networkx
+7) sudo pip3 install plotply
+8) sudo pip3 install graphviz
+9) sudo pip3 install plotly==5.16.1
+10) sudo apt-get install graphviz libgraphoviz-dev graphviz-dev
+11) sudo pip3 install pygraphviz
+
+
+The main piece of the graph visualisation script is comming from
+
+https://towardsdatascience.com/visualising-similarity-clusters-with-interactive-graphs-20a4b2a18534

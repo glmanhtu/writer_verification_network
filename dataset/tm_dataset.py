@@ -79,12 +79,15 @@ class TMDataset(Dataset):
         positive_samples = self.letters[letter][tm].copy()
         positive_samples.remove(anchor)
 
-        with Image.open(random.choice(positive_samples)) as img:
+        positive_img_path = random.choice(positive_samples)
+        with Image.open(positive_img_path) as img:
             positive_img = self.transforms(img)
 
         return {
             "positive": positive_img,
             "anchor": anchor_img,
             "letter": letter,
-            "tm": tm
+            "tm": tm,
+            "anchor_id": os.path.basename(anchor),
+            "positive_id": os.path.basename(positive_img_path)
         }

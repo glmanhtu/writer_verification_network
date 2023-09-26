@@ -143,9 +143,13 @@ class Trainer:
 
     @staticmethod
     def add_features(letter_features, letters, tm_features, features):
-        for letter, tm, features in zip(letters, tm_features, features):
-            feature_cpu = features.cpu()
-            letter_features.setdefault(letter, {}).setdefault(tm, []).append(feature_cpu)
+        for letter, tm, features in zip(letters, tm_features, features.detach()):
+            item = letter_features.setdefault(letter, {})
+            if tm in item:
+                item[tm] = torch.cat([item[tm], features])
+            else:
+                item[tm] = features
+
 
     def _validate(self, i_epoch, val_loader, mode='val', n_time_validates=1):
         val_start_time = time.time()
@@ -165,7 +169,7 @@ class Trainer:
         similarity_matrices = {}
         for letter in letter_features:
             ascii_letter = letter_ascii[letter]
-
+            letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter].items()}
             similar_df = compute_similarity_matrix(letter_features[letter])
             wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)

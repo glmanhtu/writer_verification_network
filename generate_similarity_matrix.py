@@ -50,10 +50,13 @@ class Trainer:
         self._model.load()
 
     @staticmethod
-    def add_features(letter_features, letters, cliplet_ids, features):
-        for letter, cliplet, features in zip(letters, cliplet_ids, features):
-            feature_cpu = features.cpu()
-            letter_features.setdefault(letter, {}).setdefault(cliplet, []).append(feature_cpu)
+    def add_features(letter_features, letters, tm_features, features):
+        for letter, tm, features in zip(letters, tm_features, features.detach()):
+            item = letter_features.setdefault(letter, {})
+            if tm in item:
+                item[tm] = torch.cat([item[tm], features])
+            else:
+                item[tm] = features
 
     def validate(self, n_time_validates=1):
         # set model to eval
@@ -69,6 +72,7 @@ class Trainer:
             print(f'Finished the evaluating {i + 1}/{n_time_validates}')
 
         for letter in letter_features:
+            letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter].items()}
             similar_df = compute_similarity_matrix(letter_features[letter])
             ascii_letter = letter_ascii[letter]
             similar_df.to_csv(os.path.join(self._working_dir, f'similarity_cliplet_{ascii_letter}.csv'),

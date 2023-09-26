@@ -54,9 +54,9 @@ class Trainer:
         for letter, tm, features in zip(letters, tm_features, features.detach()):
             item = letter_features.setdefault(letter, {})
             if tm in item:
-                item[tm] = torch.cat([item[tm], features])
+                item[tm] = torch.cat([item[tm], features.view(1, -1)], dim=0)
             else:
-                item[tm] = features
+                item[tm] = features.view(1, -1)
 
     def validate(self, n_time_validates=1):
         # set model to eval
@@ -82,7 +82,6 @@ if __name__ == "__main__":
     trainer = Trainer()
     if trainer.is_trained():
         trainer.set_current_step(wandb.run.step)
-        trainer.load_pretrained_model()
 
     if not trainer.is_trained():
         raise Exception('Please train your model first')

@@ -146,9 +146,9 @@ class Trainer:
         for letter, tm, features in zip(letters, tm_features, features.detach()):
             item = letter_features.setdefault(letter, {})
             if tm in item:
-                item[tm] = torch.cat([item[tm], features])
+                item[tm] = torch.cat([item[tm], features.view(1, -1)], dim=0)
             else:
-                item[tm] = features
+                item[tm] = features.view(1, -1)
 
 
     def _validate(self, i_epoch, val_loader, mode='val', n_time_validates=1):

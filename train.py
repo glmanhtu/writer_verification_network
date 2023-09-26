@@ -169,7 +169,6 @@ class Trainer:
         similarity_matrices = {}
         for letter in letter_features:
             ascii_letter = letter_ascii[letter]
-            letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter].items()}
             similar_df = compute_similarity_matrix(letter_features[letter])
             wandb.log({f'val/similarity_matrix/{ascii_letter}': wandb.Image(create_heatmap(similar_df))},
                       step=self._current_step)

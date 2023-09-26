@@ -72,7 +72,6 @@ class Trainer:
             print(f'Finished the evaluating {i + 1}/{n_time_validates}')
 
         for letter in letter_features:
-            letter_features[letter] = {k: torch.stack(v) for k, v in letter_features[letter].items()}
             similar_df = compute_similarity_matrix(letter_features[letter])
             ascii_letter = letter_ascii[letter]
             similar_df.to_csv(os.path.join(self._working_dir, f'similarity_cliplet_{ascii_letter}.csv'),

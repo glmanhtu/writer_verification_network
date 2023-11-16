@@ -4,8 +4,9 @@
 import numpy as np
 
 
-def get_sorted_retrievals(D, classes, remove_self_column=True):
-    correct_retrievals = classes[None, :] == classes[:, None]
+def get_sorted_retrievals(D, classes, remove_self_column=True, correct_retrievals=None):
+    if correct_retrievals is None:
+        correct_retrievals = classes[None, :] == classes[:, None]
     sorted_indexes = np.argsort(D, axis=1)
     if remove_self_column:
         sorted_indexes = sorted_indexes[:, 1:]  # removing self
@@ -14,9 +15,9 @@ def get_sorted_retrievals(D, classes, remove_self_column=True):
     return sorted_retrievals
 
 
-def get_precision_recall_matrices(D, classes, remove_self_column=True):
+def get_precision_recall_matrices(D, classes, remove_self_column=True, correct_retrievals=None):
     sorted_retrievals = get_sorted_retrievals(
-        D, classes, remove_self_column=remove_self_column)
+        D, classes, remove_self_column=remove_self_column, correct_retrievals=correct_retrievals)
     relevant_count = sorted_retrievals.sum(axis=1).reshape(-1, 1)
     precision_at = np.cumsum(sorted_retrievals, axis=1).astype(
         "float") / np.cumsum(np.ones_like(sorted_retrievals), axis=1)

@@ -65,34 +65,51 @@ def add_items_to_group(items, groups):
         groups.append(set(items))
 
 
-def load_triplet_file(filter_file, all_tms):
+def load_triplet_file(filter_file, all_tms, with_likely=False):
     all_tms = set(all_tms)
+    positive_groups, negative_pairs = [], {}
+    positive_pairs = {}
+    mapping = {}
     with open(filter_file) as f:
         triplet_filter = json.load(f)
-    positive_groups, negative_pairs = [], {}
-    missing_tm = set([])
     for item in triplet_filter['relations']:
         current_tm = item['category']
-        if current_tm not in all_tms:
-            missing_tm.add(current_tm)
-            continue
+        mapping[current_tm] = {}
         for second_item in item['relations']:
             second_tm = second_item['category']
-            if current_tm == '' or second_tm == '':
-                continue
-            if second_tm not in all_tms:
-                missing_tm.add(second_tm)
-                continue
             relationship = second_item['relationship']
-            if relationship == 4:
-                negative_pairs.setdefault(current_tm, []).append(second_tm)
-                negative_pairs.setdefault(second_tm, []).append(current_tm)
+            mapping[current_tm][second_tm] = relationship
+
+    for item in triplet_filter['histories']:
+        current_tm, second_tm = item['category'], item['secondary_category']
+        if current_tm in all_tms and second_tm in all_tms:
+            relationship = mapping[current_tm][second_tm]
+            if relationship == 4 or relationship == 3:
+                negative_pairs.setdefault(current_tm, set([])).add(second_tm)
+                negative_pairs.setdefault(second_tm, set([])).add(current_tm)
             if relationship == 1:
                 add_items_to_group([current_tm, second_tm], positive_groups)
+            if with_likely and relationship == 2:
+                positive_pairs.setdefault(current_tm, set([])).add(second_tm)
+                positive_pairs.setdefault(second_tm, set([])).add(current_tm)
+
+    if not with_likely:
+        for tm in all_tms:
+            add_items_to_group([tm], positive_groups)
+
+        return positive_groups, negative_pairs
+
+    for group in positive_groups:
+        for tm in group:
+            for tm2 in group:
+                positive_pairs.setdefault(tm, set([])).add(tm2)
 
     for tm in all_tms:
-        add_items_to_group([tm], positive_groups)
-    for current_tm in missing_tm:
-        print(f'TM {current_tm} is not available on the training dataset')
+        positive_pairs.setdefault(tm, set([])).add(tm)
+        negative_pairs.setdefault(tm, set([]))
 
-    return positive_groups, negative_pairs
+    # for current_tm in missing_tm:
+    #     print(f'TM {current_tm} is not available on the training dataset')
+
+    return positive_pairs, negative_pairs
+

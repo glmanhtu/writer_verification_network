@@ -132,6 +132,28 @@ def get_metrics(similarity_matrix, get_group_id):
     return mAP, top_1, pr_a_k10, pr_a_k100
 
 
+def get_metrics_v2(distance_matrix, triplet_def, remove_self_column=True):
+    positive_pairs, _ = triplet_def
+    correct_retrievals = distance_matrix.copy(deep=True) * 0
+    for row in distance_matrix.index:
+        for col in distance_matrix.columns:
+            if col in positive_pairs[row]:
+                correct_retrievals[col][row] = 1
+                correct_retrievals[row][col] = 1
+    correct_retrievals = correct_retrievals.to_numpy() > 0
+    distance_matrix = distance_matrix.to_numpy()
+    precision_at, recall_at, sorted_retrievals = wi19_evaluate.get_precision_recall_matrices(
+        distance_matrix, classes=None, remove_self_column=remove_self_column, correct_retrievals=correct_retrievals)
+
+    non_singleton_idx = sorted_retrievals.sum(axis=1) > 0
+    mAP = wi19_evaluate.compute_map(precision_at[non_singleton_idx, :], sorted_retrievals[non_singleton_idx, :])
+    top_1 = sorted_retrievals[:, 0].sum() / len(sorted_retrievals)
+    pr_a_k10 = compute_pr_a_k(sorted_retrievals, 10)
+    pr_a_k100 = compute_pr_a_k(sorted_retrievals, 100)
+    # roc = wi19_evaluate.compute_roc(sorted_retrievals)
+    return mAP, top_1, pr_a_k10, pr_a_k100
+
+
 def compute_pr_a_k(sorted_retrievals, k):
     pr_a_k = sorted_retrievals[:, :k].sum(axis=1) / np.minimum(sorted_retrievals.sum(axis=1), k)
     return pr_a_k.sum() / len(pr_a_k)

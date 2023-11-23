@@ -138,4 +138,3 @@ resources/*.pth
 
 checkpoints
 wandb
-*.triplet

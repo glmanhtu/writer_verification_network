@@ -31,7 +31,7 @@ eval:
 lr_scheduler:
   warmup_epochs: 5
   warmup_lr: 5e-7
-  min_lr: 5e-6
+  min_lr: 1e-5
 
 train:
   start_epoch: 0

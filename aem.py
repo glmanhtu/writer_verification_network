@@ -6,6 +6,7 @@ import time
 import albumentations as A
 import cv2
 import hydra
+import pandas as pd
 import torch
 import torchvision
 from ml_engine.criterion.losses import NegativeCosineSimilarityLoss, LossCombination
@@ -235,10 +236,10 @@ class AEMTrainer(Trainer):
                     distance_dfs[idx].to_csv(path)
                     self._tracker.log_artifact(path, 'best_results')
 
-            avg_distance_df = sum(distance_dfs) / len(distance_dfs)
+            average_df = pd.concat(distance_dfs).groupby(level=0).mean()
             with tempfile.TemporaryDirectory() as tmp:
                 path = os.path.join(tmp, f'distance_matrix_avg.csv')
-                avg_distance_df.to_csv(path)
+                average_df.to_csv(path)
                 self._tracker.log_artifact(path, 'best_results')
 
         self.logger.info(f'Average: \t mAP {m_ap:.4f}\t top1 {top1:.3f}\t pr@k5 {pra5:.3f}\t')

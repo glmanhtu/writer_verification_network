@@ -9,4 +9,4 @@ imagesize~=1.4.1
 Pillow~=10.0.1
 omegaconf~=2.3.0
 hydra-core~=1.3
-https://github.com/glmanhtu/ml-engine/archive/master.zip
+-e git+https://github.com/glmanhtu/ml-engine#egg=ml-engine

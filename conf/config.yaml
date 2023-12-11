@@ -35,9 +35,9 @@ lr_scheduler:
 
 train:
   start_epoch: 0
-  epochs: 300
-  weight_decay: 0.05
-  base_lr: 1e-4
+  epochs: 150
+  weight_decay: 0.01
+  base_lr: 5e-4
   clip_grad: 5.0
   resume: False
   accumulation_steps: 1

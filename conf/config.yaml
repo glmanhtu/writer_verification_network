@@ -29,7 +29,7 @@ eval:
   distance_reduction: mean
 
 lr_scheduler:
-  warmup_epochs: 20
+  warmup_epochs: 5
   warmup_lr: 5e-7
   min_lr: 5e-6
 

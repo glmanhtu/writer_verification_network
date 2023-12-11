@@ -1,0 +1,44 @@
+exp:
+  name: AEM
+  description: Writer identification on the AEM Greek letter dataset
+  tracking_uri: ???
+  tags:
+    project: writer-identification
+
+run:
+  name: ss2ce-wlikely-CE.5-im112
+  run_id:
+  tags:
+    backbone: resnet34
+    network: simsiam
+    mlflow.note.content: ${exp.description}
+
+defaults:
+  - data: aem
+  - model: ss2ce
+  - lr_scheduler: cosine
+  - optimizer: adamw
+  - _self_
+
+mode: train
+amp_enable: True
+print_freq: 20
+save_freq: 1
+seed: 0
+eval:
+  distance_reduction: mean
+
+lr_scheduler:
+  warmup_epochs: 20
+  warmup_lr: 5e-7
+  min_lr: 5e-6
+
+train:
+  start_epoch: 0
+  epochs: 300
+  weight_decay: 0.05
+  base_lr: 1e-4
+  clip_grad: 5.0
+  resume: False
+  accumulation_steps: 1
+  combine_loss_weight: 0.5

@@ -1,0 +1,17 @@
+name: aem
+path: ???
+batch_size: 128
+test_batch_size: 128
+letters:
+  - α
+  - ε
+  - μ
+m_per_class: 5
+with_likely: True
+img_size: 112
+pin_memory: True    # Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.
+num_workers: 4      # Number of data loading threads
+triplet_files:
+  - BT120220128.triplet
+  - Eps20220408.triplet
+  - mtest.triplet

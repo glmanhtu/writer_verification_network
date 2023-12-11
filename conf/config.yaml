@@ -25,6 +25,7 @@ amp_enable: True
 print_freq: 20
 save_freq: 1
 seed: 0
+log_dir: logs
 eval:
   distance_reduction: mean
 

@@ -1,5 +1,4 @@
 import copy
-import logging
 import os
 import tempfile
 import time
@@ -23,7 +22,19 @@ from torch.utils.data import DataLoader
 from aem_dataset import AEMLetterDataset, AEMDataLoader, load_triplet_file
 from criterion import ClassificationLoss, SubSetSimSiamLoss, SubSetTripletLoss
 
-logger = logging.getLogger(__name__)
+
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def dl_main(cfg: DictConfig):
+    tracker = MLFlowTracker(cfg.exp.name, cfg.exp.tracking_uri, tags=cfg.exp.tags)
+    trainer = AEMTrainer(cfg, tracker)
+    with tracker.start_tracking(run_id=cfg.run.run_id, run_name=cfg.run.name, tags=dict(cfg.run.tags)):
+        if cfg.mode == 'eval':
+            trainer.validate()
+        elif cfg == 'throughput':
+            trainer.throughput()
+        else:
+            trainer.train()
+        tracker.log_artifacts(cfg.log_dir, 'logs')
 
 
 class AEMTrainer(Trainer):
@@ -130,7 +141,7 @@ class AEMTrainer(Trainer):
     def is_simsiam(self):
         return 'ss' in self._cfg.model.type
 
-    def validate_dataloader(self, data_loader, triplet_def):
+    def validate_dataloader(self, data_loader, triplet_def, letter):
         batch_time, m_ap_meter = AverageMeter(), AverageMeter()
         top1_meter, pk5_meter = AverageMeter(), AverageMeter()
 
@@ -186,56 +197,52 @@ class AEMTrainer(Trainer):
 
         AverageMeter.reduces(m_ap_meter, top1_meter, pk5_meter)
 
-        if 1 - m_ap_meter.avg < self._min_loss:
-            with tempfile.TemporaryDirectory() as tmp:
-                path = os.path.join(tmp, 'distance_matrix.csv')
-                distance_df.to_csv(path)
-                self._tracker.log_artifact(path, 'best_results')
-
-        return m_ap_meter.avg, top1_meter.avg, pk5_meter.avg, tms
+        return m_ap_meter.avg, top1_meter.avg, pk5_meter.avg, distance_df
 
     def validate_one_epoch(self, dataloaders):
-        final_map, final_top1, final_pra5 = [], [], []
-        for idx, letter in enumerate(self._cfg.data.letters):
+        maps, top1s, pra5s = [], [], []
+        distance_dfs = []
+        for idx, let in enumerate(self._cfg.data.letters):
             triplet_def = load_triplet_file(self._cfg.data.triplet_files[idx], self._cfg.data.with_likely)
 
-            m_ap, top1, pra5, tms = self.validate_dataloader(dataloaders[idx], triplet_def)
-            self.log_metrics({f'{letter}_mAP': m_ap, f'{letter}_top1': top1, f'{letter}_prak5': pra5})
-            logger.info(
-                f'Letter {letter}:\t'
-                f'N TMs: {len(tms)}\t' 
+            m_ap, top1, pra5, distance_df = self.validate_dataloader(dataloaders[idx], triplet_def, let)
+            distance_dfs.append(distance_df)
+
+            self.logger.info(
+                f'Letter {let}:\t'
+                f'N TMs: {len(distance_df.columns)}\t' 
                 f'mAP {m_ap:.4f}\t'
                 f'top1 {top1:.3f}\t'
                 f'pr@k10 {pra5:.3f}\t')
 
-            final_map.append(m_ap)
-            final_top1.append(top1)
-            final_pra5.append(pra5)
+            maps.append(m_ap)
+            top1s.append(top1)
+            pra5s.append(pra5)
 
-        final_map = sum(final_map) / len(final_map)
-        final_top1 = sum(final_top1) / len(final_top1)
-        final_pra5 = sum(final_pra5) / len(final_pra5)
+        m_ap = sum(maps) / len(maps)
+        top1 = sum(top1s) / len(top1s)
+        pra5 = sum(pra5s) / len(pra5s)
 
-        self.log_metrics({'mAP': final_map, 'top1': final_top1, 'prak5': final_pra5})
-        logger.info(
-            f'Average:'
-            f'mAP {final_map:.4f}\t'
-            f'top1 {final_top1:.3f}\t'
-            f'pr@k5 {final_pra5:.3f}\t')
-        return 1 - final_map
+        eval_loss = 1 - m_ap
 
+        self.log_metrics({'mAP': m_ap, 'top1': top1, 'prak5': pra5})
+        if eval_loss < self._min_loss:
+            self.log_metrics({'best_mAP': m_ap, 'best_top1': top1, 'best_prak5': pra5})
+            for idx, let in enumerate(self._cfg.data.letters):
+                self.log_metrics({f'{let}_mAP': maps[idx], f'{let}_top1': top1s[idx], f'{let}_prak5': pra5s[idx]})
+                with tempfile.TemporaryDirectory() as tmp:
+                    path = os.path.join(tmp, f'distance_matrix_{let}.csv')
+                    distance_dfs[idx].to_csv(path)
+                    self._tracker.log_artifact(path, 'best_results')
 
-@hydra.main(version_base=None, config_path="conf", config_name="config")
-def dl_main(cfg: DictConfig):
-    tracker = MLFlowTracker(cfg.exp.name, cfg.exp.tracking_uri, tags=cfg.exp.tags)
-    trainer = AEMTrainer(cfg, tracker)
-    with tracker.start_tracking(run_id=cfg.run.run_id, run_name=cfg.run.name, tags=dict(cfg.run.tags)):
-        if cfg.mode == 'eval':
-            trainer.validate()
-        elif cfg == 'throughput':
-            trainer.throughput()
-        else:
-            trainer.train()
+            avg_distance_df = sum(distance_dfs) / len(distance_dfs)
+            with tempfile.TemporaryDirectory() as tmp:
+                path = os.path.join(tmp, f'distance_matrix_avg.csv')
+                avg_distance_df.to_csv(path)
+                self._tracker.log_artifact(path, 'best_results')
+
+        self.logger.info(f'Average: \t mAP {m_ap:.4f}\t top1 {top1:.3f}\t pr@k5 {pra5:.3f}\t')
+        return eval_loss
 
 
 if __name__ == '__main__':

@@ -46,7 +46,7 @@ class AEMDataLoader:
 
 
 class AEMLetterDataset(Dataset):
-    def __init__(self, dataset_path: str, transforms, letter):
+    def __init__(self, dataset_path: str, transforms, letter, min_size_limit):
         self.dataset_path = dataset_path
         image_pattern = os.path.join(dataset_path, '**', '*.png')
         files = glob.glob(image_pattern, recursive=True)
@@ -60,7 +60,7 @@ class AEMLetterDataset(Dataset):
             if curr_letter != letter:
                 continue
             width, height = imagesize.get(file)
-            if width < 32 or height < 32:
+            if width < min_size_limit or height < min_size_limit:
                 # Ignore extreme small images
                 continue
             if '_ex.png' in file and os.path.exists(file.replace('_ex', '')):

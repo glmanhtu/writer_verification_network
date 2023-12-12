@@ -8,6 +8,7 @@ letters:
   - μ
 m_per_class: 5
 with_likely: True
+min_size_limit: 32
 img_size: 112
 pin_memory: True    # Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.
 num_workers: 4      # Number of data loading threads

@@ -110,7 +110,7 @@ class AEMTrainer(Trainer):
         datasets = []
         for letter in data_conf.letters:
             dataset_path = data_conf.path
-            dataset = AEMLetterDataset(dataset_path, transform, letter)
+            dataset = AEMLetterDataset(dataset_path, transform, letter, data_conf.min_size_limit)
             datasets.append(dataset)
         return datasets
 

@@ -114,7 +114,7 @@ class AEMTrainer(Trainer):
             datasets.append(dataset)
         return datasets
 
-    def get_dataloader(self, mode, datasets, data_conf, repeat):
+    def get_dataloader(self, mode, datasets, data_conf):
         if mode in self.data_loader_registers:
             return self.data_loader_registers[mode]
 

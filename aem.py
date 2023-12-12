@@ -142,7 +142,7 @@ class AEMTrainer(Trainer):
     def is_simsiam(self):
         return 'ss' in self._cfg.model.type
 
-    def validate_dataloader(self, data_loader, triplet_def, letter):
+    def validate_dataloader(self, data_loader, triplet_def):
         batch_time, m_ap_meter = AverageMeter(), AverageMeter()
         top1_meter, pk5_meter = AverageMeter(), AverageMeter()
 
@@ -206,7 +206,7 @@ class AEMTrainer(Trainer):
         for idx, let in enumerate(self._cfg.data.letters):
             triplet_def = load_triplet_file(self._cfg.data.triplet_files[idx], self._cfg.data.with_likely)
 
-            m_ap, top1, pra5, distance_df = self.validate_dataloader(dataloaders[idx], triplet_def, let)
+            m_ap, top1, pra5, distance_df = self.validate_dataloader(dataloaders[idx], triplet_def)
             distance_dfs.append(distance_df)
 
             self.logger.info(

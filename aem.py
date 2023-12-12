@@ -35,7 +35,9 @@ def dl_main(cfg: DictConfig):
             trainer.throughput()
         else:
             trainer.train()
-        tracker.log_artifacts(cfg.log_dir, 'logs')
+
+        exp_log_dir = os.path.join(cfg.log_dir, cfg.run.name)
+        tracker.log_artifacts(exp_log_dir, 'logs')
 
 
 class AEMTrainer(Trainer):

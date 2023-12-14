@@ -111,7 +111,7 @@ class AEMTrainer(Trainer):
         datasets = []
         for letter in data_conf.letters:
             dataset_path = data_conf.path
-            if data_conf.val_path and mode == 'val':
+            if data_conf.val_path and mode == 'validation':
                 dataset_path = data_conf.val_path
             dataset = AEMLetterDataset(dataset_path, transform, letter, data_conf.min_size_limit)
             datasets.append(dataset)

@@ -9,7 +9,8 @@ import hydra
 import pandas as pd
 import torch
 import torchvision
-from ml_engine.criterion.losses import NegativeCosineSimilarityLoss, LossCombination
+from ml_engine.criterion.losses import NegativeCosineSimilarityLoss, LossCombination, DistanceLoss, BatchDotProduct, \
+    NegativeLoss
 from ml_engine.engine import Trainer
 from ml_engine.evaluation.distances import compute_distance_matrix
 from ml_engine.evaluation.metrics import AverageMeter, calc_map_prak
@@ -138,8 +139,8 @@ class AEMTrainer(Trainer):
         if self.is_simsiam():
             ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
-            return LossCombination([ssl, cls])
-        return SubSetTripletLoss(margin=0.15, n_subsets=len(letters))
+            return DistanceLoss(LossCombination([ssl, cls]), NegativeLoss(NegativeCosineSimilarityLoss()))
+        return DistanceLoss(SubSetTripletLoss(margin=0.15, n_subsets=len(letters)), NegativeLoss(BatchDotProduct()))
 
     def is_simsiam(self):
         return 'ss' in self._cfg.model.type
@@ -176,8 +177,9 @@ class AEMTrainer(Trainer):
             features.setdefault(tm, []).append(feature)
 
         features = {k: torch.stack(v).cuda() for k, v in features.items()}
+        criterion = self.get_criterion()
         distance_df = compute_distance_matrix(features, reduction=self._cfg.eval.distance_reduction,
-                                              distance_fn=NegativeCosineSimilarityLoss())
+                                              distance_fn=criterion.compute_distance)
 
         tms = []
         dataset_tms = set(distance_df.columns)

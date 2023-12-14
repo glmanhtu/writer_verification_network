@@ -191,10 +191,10 @@ class AEMTrainer(Trainer):
                     tms.append(tm)
 
         categories = sorted(tms)
-        distance_df = distance_df.loc[categories, categories]
+        distance_eval = distance_df.loc[categories, categories]
 
-        distance_matrix = distance_df.to_numpy()
-        m_ap, (top_1, pr_a_k5) = calc_map_prak(distance_matrix, distance_df.columns, positive_pairs, negative_pairs)
+        distance_matrix = distance_eval.to_numpy()
+        m_ap, (top_1, pr_a_k5) = calc_map_prak(distance_matrix, distance_eval.columns, positive_pairs, negative_pairs)
 
         m_ap_meter.update(m_ap)
         top1_meter.update(top_1)

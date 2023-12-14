@@ -1,5 +1,6 @@
 name: aem
 path: ???
+val_path:
 batch_size: 128
 test_batch_size: 128
 train_repeat: 10

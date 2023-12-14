@@ -48,8 +48,8 @@ class AEMDataLoader:
 class AEMLetterDataset(Dataset):
     def __init__(self, dataset_path: str, transforms, letter, min_size_limit):
         self.dataset_path = dataset_path
-        image_pattern = os.path.join(dataset_path, '**', '*.png')
-        files = glob.glob(image_pattern, recursive=True)
+        files = glob.glob(os.path.join(dataset_path, '**', '*.png'), recursive=True)
+        files.extend(glob.glob(os.path.join(dataset_path, '**', '*.jpg'), recursive=True))
 
         tms = {}
         for file in files:

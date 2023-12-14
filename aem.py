@@ -124,7 +124,8 @@ class AEMTrainer(Trainer):
             data_loader = AEMDataLoader(datasets, batch_size=data_conf.batch_size,
                                         m=data_conf.m_per_class,
                                         numb_workers=data_conf.num_workers,
-                                        pin_memory=data_conf.pin_memory)
+                                        pin_memory=data_conf.pin_memory,
+                                        repeat=data_conf.train_repeat)
         else:
             for idx, letter in enumerate(data_conf.letters):
                 sub_data_loader = DataLoader(datasets[idx], batch_size=data_conf.batch_size,

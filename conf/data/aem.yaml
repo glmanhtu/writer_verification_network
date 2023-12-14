@@ -2,6 +2,7 @@ name: aem
 path: ???
 batch_size: 128
 test_batch_size: 128
+train_repeat: 10
 letters:
   - α
   - ε

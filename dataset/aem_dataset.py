@@ -6,7 +6,7 @@ import imagesize
 import torch
 from PIL import Image
 from ml_engine.data.grouping import add_items_to_group
-from ml_engine.data.samplers import MPerClassSampler
+from pytorch_metric_learning.samplers import MPerClassSampler
 from torch.utils.data import Dataset, DataLoader
 
 

@@ -75,7 +75,7 @@ class FontTrainer(AEMTrainer):
             ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
             return DistanceLoss(LossCombination([ssl, cls]), NegativeCosineSimilarityLoss(reduction='none'))
-        return DistanceLoss(SubSetTripletLoss(margin=0.8, n_subsets=len(letters)),
+        return DistanceLoss(SubSetTripletLoss(margin=0.3, n_subsets=len(letters)),
                             NegativeLoss(BatchDotProduct(reduction='none')))
 
     def _validate_dataloader(self, data_loader):

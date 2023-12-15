@@ -1,21 +1,14 @@
-name: aem
+name: fonts
 path: ???
-val_path:
+background_path: ???
 batch_size: 128
-test_batch_size: 128
 train_repeat: 10
 letters:
-  - α
-  - ε
-  - μ
+  - a
+  - e
+  - u
 m_per_class: 5
 repeat_same_class: False
-with_likely: True
-min_size_limit: 32
 img_size: 112
 pin_memory: True    # Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.
 num_workers: 4      # Number of data loading threads
-triplet_files:
-  - BT120220128.triplet
-  - Eps20220408.triplet
-  - mtest.triplet

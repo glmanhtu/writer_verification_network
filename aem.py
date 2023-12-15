@@ -142,7 +142,7 @@ class AEMTrainer(Trainer):
         if self.is_simsiam():
             ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
-            return DistanceLoss(LossCombination([ssl, cls]), NegativeLoss(NegativeCosineSimilarityLoss()))
+            return DistanceLoss(LossCombination([ssl, cls]), NegativeCosineSimilarityLoss())
         return DistanceLoss(SubSetTripletLoss(margin=0.15, n_subsets=len(letters)), NegativeLoss(BatchDotProduct()))
 
     def is_simsiam(self):

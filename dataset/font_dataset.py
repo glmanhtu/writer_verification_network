@@ -94,7 +94,7 @@ class FontDataset(Dataset):
 
         # Automatically adjust font size to fit the text within the image
         font_size = self.get_optimal_font_size(draw, font_path)
-        font_size = round(random.uniform(0.8, 1.0) * font_size)
+        font_size = round(random.uniform(0.5, 0.9) * font_size)
         font = ImageFont.truetype(font_path, size=int(font_size))
 
         # Get the bounding box of the text
@@ -129,7 +129,7 @@ class FontDataset(Dataset):
     def get_optimal_font_size(self, draw, font_path):
         if font_path in self.__ref_font_size:
             return self.__ref_font_size[font_path]
-        max_font_size = 400  # Maximum font size to prevent extremely large text
+        max_font_size = 1000  # Maximum font size to prevent extremely large text
         min_font_size = 1  # Minimum font size to prevent extremely small text
 
         result = min_font_size

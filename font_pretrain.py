@@ -38,10 +38,12 @@ def dl_main(cfg: DictConfig):
 
 class FontTrainer(AEMTrainer):
     def get_transform(self, mode, data_cfg):
+        img_size = data_cfg.img_size
         transform = torchvision.transforms.Compose([
-            torchvision.transforms.RandomApply([
-                torchvision.transforms.GaussianBlur((3, 3), (1.0, 2.0)),
-            ], p=0.5),
+            torchvision.transforms.Resize((img_size, img_size)),
+            ACompose([
+                A.CLAHE(p=1)
+            ]),
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ])
@@ -51,10 +53,9 @@ class FontTrainer(AEMTrainer):
             ACompose([
                 A.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=20, p=0.5,
                                    border_mode=cv2.BORDER_CONSTANT, value=(0, 0, 0)),
-                A.CoarseDropout(max_holes=15)
-
+                A.AdvancedBlur(blur_limit=5, p=1),
+                A.CoarseDropout(max_holes=20, min_holes=10, max_height=10, max_width=10, p=1)
             ]),
-            torchvision.transforms.GaussianBlur((3, 3), (2.0, 4.0)),
         ])
         return transform, stroke_transform
 
@@ -65,7 +66,7 @@ class FontTrainer(AEMTrainer):
             dataset_path = data_conf.path
             split = FontDataset.Split.from_string(mode)
             dataset = FontDataset(dataset_path, data_conf.background_path, split, stroke_transform, transform, letter,
-                                  data_conf.img_size, data_conf.m_per_class)
+                                  data_conf.img_size * 2, data_conf.m_per_class)
             datasets.append(dataset)
         return datasets
 

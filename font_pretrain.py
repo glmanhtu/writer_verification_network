@@ -39,21 +39,22 @@ def dl_main(cfg: DictConfig):
 class FontTrainer(AEMTrainer):
     def get_transform(self, mode, data_cfg):
         transform = torchvision.transforms.Compose([
+            torchvision.transforms.RandomApply([
+                torchvision.transforms.GaussianBlur((3, 3), (1.0, 2.0)),
+            ], p=0.5),
             torchvision.transforms.ToTensor(),
             torchvision.transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ])
 
         stroke_transform = torchvision.transforms.Compose([
-            torchvision.transforms.RandomAffine(5, translate=(0.1, 0.1), fill=0),
+            torchvision.transforms.RandomAffine(10, translate=(0.1, 0.1), fill=0),
             ACompose([
-                A.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=15, p=0.5,
+                A.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=20, p=0.5,
                                    border_mode=cv2.BORDER_CONSTANT, value=(0, 0, 0)),
-                A.CoarseDropout()
+                A.CoarseDropout(max_holes=15)
 
             ]),
-            torchvision.transforms.RandomApply([
-                torchvision.transforms.GaussianBlur((3, 3), (2.0, 4.0)),
-            ], p=0.7),
+            torchvision.transforms.GaussianBlur((3, 3), (2.0, 4.0)),
         ])
         return transform, stroke_transform
 
@@ -74,7 +75,7 @@ class FontTrainer(AEMTrainer):
             ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
             return DistanceLoss(LossCombination([ssl, cls]), NegativeCosineSimilarityLoss(reduction='none'))
-        return DistanceLoss(SubSetTripletLoss(margin=0.15, n_subsets=len(letters)),
+        return DistanceLoss(SubSetTripletLoss(margin=0.8, n_subsets=len(letters)),
                             NegativeLoss(BatchDotProduct(reduction='none')))
 
     def _validate_dataloader(self, data_loader):

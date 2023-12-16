@@ -58,7 +58,7 @@ class AEMTrainer(Trainer):
                     A.LongestMaxSize(max_size=img_size),
                     A.ShiftScaleRotate(shift_limit=0, scale_limit=0.1, rotate_limit=15, p=0.5, value=(255, 255, 255),
                                        border_mode=cv2.BORDER_CONSTANT),
-                    A.CLAHE(p=1)
+                    A.CLAHE(p=0.5)
 
                 ]),
                 RandomResize(img_size, ratio=(0.85, 1.0)),

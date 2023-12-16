@@ -28,8 +28,8 @@ from criterion import ClassificationLoss, SubSetSimSiamLoss, SubSetTripletLoss
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def dl_main(cfg: DictConfig):
     tracker = MLFlowTracker(cfg.exp.name, cfg.exp.tracking_uri, tags=cfg.exp.tags)
-    trainer = AEMTrainer(cfg, tracker)
     with tracker.start_tracking(run_id=cfg.run.run_id, run_name=cfg.run.name, tags=dict(cfg.run.tags)):
+        trainer = AEMTrainer(cfg, tracker)
         if cfg.mode == 'eval':
             trainer.validate()
         elif cfg == 'throughput':
@@ -69,6 +69,7 @@ class AEMTrainer(Trainer):
             return torchvision.transforms.Compose([
                 ACompose([
                     A.LongestMaxSize(max_size=img_size),
+                    A.CLAHE(p=1)
                 ]),
                 PadCenterCrop(img_size, pad_if_needed=True, fill=255),
                 torchvision.transforms.ToTensor(),

@@ -70,7 +70,7 @@ class AEMTrainer(Trainer):
             return torchvision.transforms.Compose([
                 ACompose([
                     A.LongestMaxSize(max_size=img_size),
-                    # A.CLAHE(p=1)
+                    A.CLAHE(p=1)
                 ]),
                 PadCenterCrop(img_size, pad_if_needed=True, fill=255),
                 torchvision.transforms.ToTensor(),

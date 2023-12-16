@@ -2,6 +2,7 @@ import copy
 import os
 import tempfile
 import time
+from collections import OrderedDict
 
 import albumentations as A
 import cv2
@@ -69,7 +70,7 @@ class AEMTrainer(Trainer):
             return torchvision.transforms.Compose([
                 ACompose([
                     A.LongestMaxSize(max_size=img_size),
-                    A.CLAHE(p=1)
+                    # A.CLAHE(p=1)
                 ]),
                 PadCenterCrop(img_size, pad_if_needed=True, fill=255),
                 torchvision.transforms.ToTensor(),
@@ -80,7 +81,7 @@ class AEMTrainer(Trainer):
         if model_conf.type == 'ss2ce':
             model = SimSiamV2CE(
                 arch=model_conf.arch,
-                pretrained=model_conf.pretrained,
+                pretrained=model_conf.weights,
                 dim=model_conf.embed_dim,
                 pred_dim=model_conf.pred_dim,
                 dropout=model_conf.dropout,
@@ -107,6 +108,23 @@ class AEMTrainer(Trainer):
 
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
         return model
+
+    def prepare_pretrained_model(self, model_type, model_state_dict, pretrained_state_dict):
+        if self.is_simsiam():
+            final_state_dict = []
+            imported_count, not_imported_count = 0, 0
+            for k, v in model_state_dict.items():
+                pretrained_key = k.replace('encoder.', 'model.model.')
+                if pretrained_key in pretrained_state_dict:
+                    final_state_dict.append((k, pretrained_state_dict[pretrained_key]))
+                    imported_count += 1
+                else:
+                    final_state_dict.append((k, v))
+                    not_imported_count += 1
+            final_state_dict = OrderedDict(final_state_dict)
+            self.logger.info(f"State dict imported: {imported_count}/{not_imported_count + imported_count}")
+            return final_state_dict
+        return pretrained_state_dict
 
     def load_dataset(self, mode, data_conf, transform):
         datasets = []

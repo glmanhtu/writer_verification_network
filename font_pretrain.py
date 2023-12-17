@@ -72,10 +72,13 @@ class FontTrainer(AEMTrainer):
 
     def get_criterion(self):
         letters = self._cfg.data.letters
-        if self.is_simsiam():
+        if self._cfg.model.type == 'ss2ce':
             ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
             return DistanceLoss(LossCombination([ssl, cls]), NegativeCosineSimilarityLoss(reduction='none'))
+        elif self._cfg.model.type == 'ss2':
+            ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
+            return DistanceLoss(ssl, NegativeCosineSimilarityLoss(reduction='none'))
         return DistanceLoss(SubSetTripletLoss(margin=0.3, n_subsets=len(letters)),
                             NegativeLoss(BatchDotProduct(reduction='none')))
 
@@ -91,8 +94,10 @@ class FontTrainer(AEMTrainer):
             # compute output
             with torch.cuda.amp.autocast(enabled=self._cfg.amp_enable):
                 embs = self._model(images)
-                if self.is_simsiam():
+                if self._cfg.model.type == 'ss2ce':
                     embs, _, _ = embs
+                elif self._cfg.model.type == 'ss2':
+                    embs, _ = embs
 
             embeddings.append(embs)
             labels.append(targets)

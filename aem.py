@@ -58,8 +58,6 @@ class AEMTrainer(Trainer):
                     A.LongestMaxSize(max_size=img_size),
                     A.ShiftScaleRotate(shift_limit=0, scale_limit=0.1, rotate_limit=15, p=0.5, value=(255, 255, 255),
                                        border_mode=cv2.BORDER_CONSTANT),
-                    A.CLAHE(p=0.5)
-
                 ]),
                 RandomResize(img_size, ratio=(0.85, 1.0)),
                 torchvision.transforms.RandomCrop(img_size, pad_if_needed=True, fill=255),
@@ -71,7 +69,6 @@ class AEMTrainer(Trainer):
             return torchvision.transforms.Compose([
                 ACompose([
                     A.LongestMaxSize(max_size=img_size),
-                    A.CLAHE(p=1)
                 ]),
                 PadCenterCrop(img_size, pad_if_needed=True, fill=255),
                 torchvision.transforms.ToTensor(),
@@ -111,7 +108,7 @@ class AEMTrainer(Trainer):
         return model
 
     def prepare_pretrained_model(self, model_type, model_state_dict, pretrained_state_dict):
-        if self.is_simsiam():
+        if self._cfg.model.type == 'ss2ce' or self._cfg.model.type == 'ss2':
             final_state_dict = []
             imported_count, not_imported_count = 0, 0
             for k, v in model_state_dict.items():
@@ -160,14 +157,15 @@ class AEMTrainer(Trainer):
 
     def get_criterion(self):
         letters = self._cfg.data.letters
-        if self.is_simsiam():
+        if self._cfg.model.type == 'ss2ce':
             ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
             return DistanceLoss(LossCombination([ssl, cls]), NegativeCosineSimilarityLoss())
-        return DistanceLoss(SubSetTripletLoss(margin=0.15, n_subsets=len(letters)), NegativeLoss(BatchDotProduct()))
+        elif self._cfg.model.type == 'ss2':
+            ssl = SubSetSimSiamLoss(n_subsets=len(letters))
+            return DistanceLoss(ssl, NegativeCosineSimilarityLoss())
 
-    def is_simsiam(self):
-        return 'ss' in self._cfg.model.type
+        return DistanceLoss(SubSetTripletLoss(margin=0.15, n_subsets=len(letters)), NegativeLoss(BatchDotProduct()))
 
     def validate_dataloader(self, data_loader, triplet_def):
         batch_time, m_ap_meter = AverageMeter(), AverageMeter()
@@ -181,8 +179,10 @@ class AEMTrainer(Trainer):
             # compute output
             with torch.cuda.amp.autocast(enabled=self._cfg.amp_enable):
                 embs = self._model(images)
-                if self.is_simsiam():
+                if self._cfg.model.type == 'ss2ce':
                     embs, _, _ = embs
+                elif self._cfg.model.type == 'ss2':
+                    embs, _ = embs
 
             embeddings.append(embs)
             labels.append(targets)

@@ -16,7 +16,7 @@ from ml_engine.engine import Trainer
 from ml_engine.evaluation.distances import compute_distance_matrix
 from ml_engine.evaluation.metrics import AverageMeter, calc_map_prak
 from ml_engine.modelling.resnet import ResNetWrapper, ResNet32MixConv
-from ml_engine.modelling.simsiam import SimSiamV2CE
+from ml_engine.modelling.simsiam import SimSiamV2CE, SimSiamV2
 from ml_engine.preprocessing.transforms import ACompose, RandomResize, PadCenterCrop
 from ml_engine.tracking.mlflow_tracker import MLFlowTracker
 from omegaconf import DictConfig
@@ -84,6 +84,14 @@ class AEMTrainer(Trainer):
                 pred_dim=model_conf.pred_dim,
                 dropout=model_conf.dropout,
                 n_classes=model_conf.n_classes)
+
+        elif model_conf.type == 'ss2':
+            model = SimSiamV2(
+                arch=model_conf.arch,
+                pretrained=model_conf.weights,
+                dim=model_conf.embed_dim,
+                pred_dim=model_conf.pred_dim,
+                dropout=model_conf.dropout)
 
         elif model_conf.type == 'resnet':
             model = ResNetWrapper(

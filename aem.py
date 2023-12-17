@@ -12,6 +12,7 @@ import torch
 import torchvision
 from ml_engine.criterion.losses import NegativeCosineSimilarityLoss, LossCombination, DistanceLoss, BatchDotProduct, \
     NegativeLoss
+from ml_engine.criterion.simsiam import BatchWiseSimSiamLoss
 from ml_engine.engine import Trainer
 from ml_engine.evaluation.distances import compute_distance_matrix
 from ml_engine.evaluation.metrics import AverageMeter, calc_map_prak
@@ -24,6 +25,26 @@ from torch.utils.data import DataLoader
 
 from dataset.aem_dataset import AEMLetterDataset, AEMDataLoader, load_triplet_file
 from criterion import ClassificationLoss, SubSetSimSiamLoss, SubSetTripletLoss
+
+
+class SubSetSimSiamV2Loss(BatchWiseSimSiamLoss):
+    def __init__(self, n_subsets=3, weight=1.):
+        super().__init__()
+        self.n_subsets = n_subsets
+        self.weight = weight
+
+    def forward(self, embeddings, targets):
+        ps, zs = embeddings
+        mini_batch = len(targets) // self.n_subsets
+        ps = torch.split(ps, [mini_batch] * self.n_subsets, dim=0)
+        zs = torch.split(zs, [mini_batch] * self.n_subsets, dim=0)
+        targets = torch.split(targets, [mini_batch] * self.n_subsets, dim=0)
+
+        losses = []
+        for p, z, target in zip(ps, zs, targets):
+            losses.append(self.forward_impl(p, z, target))
+
+        return self.weight * sum(losses) / len(losses)
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -170,7 +191,7 @@ class AEMTrainer(Trainer):
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
             return DistanceLoss(LossCombination([ssl, cls]), NegativeCosineSimilarityLoss())
         elif self._cfg.model.type == 'ss2':
-            ssl = SubSetSimSiamLoss(n_subsets=len(letters))
+            ssl = SubSetSimSiamV2Loss(n_subsets=len(letters))
             return DistanceLoss(ssl, NegativeCosineSimilarityLoss())
 
         return DistanceLoss(SubSetTripletLoss(margin=0.15, n_subsets=len(letters)), NegativeLoss(BatchDotProduct()))

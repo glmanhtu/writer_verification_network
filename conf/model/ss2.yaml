@@ -1,0 +1,7 @@
+type: ss
+arch: resnet34
+weights:
+pretrained:
+embed_dim: 2048
+pred_dim: 512
+dropout: 0.

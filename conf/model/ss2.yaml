@@ -1,4 +1,4 @@
-type: ss
+type: ss2
 arch: resnet34
 weights:
 pretrained:

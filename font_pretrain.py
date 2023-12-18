@@ -15,7 +15,7 @@ from ml_engine.preprocessing.transforms import ACompose
 from ml_engine.tracking.mlflow_tracker import MLFlowTracker
 from omegaconf import DictConfig
 
-from aem import AEMTrainer
+from aem import AEMTrainer, SubSetSimSiamV2Loss
 from criterion import SubSetSimSiamLoss, ClassificationLoss, SubSetTripletLoss
 from dataset.font_dataset import FontDataset
 
@@ -77,7 +77,7 @@ class FontTrainer(AEMTrainer):
             cls = ClassificationLoss(n_subsets=len(letters), weight=1 - self._cfg.train.combine_loss_weight)
             return DistanceLoss(LossCombination([ssl, cls]), NegativeCosineSimilarityLoss(reduction='none'))
         elif self._cfg.model.type == 'ss2':
-            ssl = SubSetSimSiamLoss(n_subsets=len(letters), weight=self._cfg.train.combine_loss_weight)
+            ssl = SubSetSimSiamV2Loss(n_subsets=len(letters))
             return DistanceLoss(ssl, NegativeCosineSimilarityLoss(reduction='none'))
         return DistanceLoss(SubSetTripletLoss(margin=0.3, n_subsets=len(letters)),
                             NegativeLoss(BatchDotProduct(reduction='none')))
